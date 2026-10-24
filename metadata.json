@@ -1,0 +1,10 @@
+{
+  "name": "Oratoria - Art Oratoire & Communication",
+  "description": "Application immersive et interactive d'apprentissage de l'art oratoire, de l'éloquence, de la maîtrise vocale et de la prise de parole en public.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
