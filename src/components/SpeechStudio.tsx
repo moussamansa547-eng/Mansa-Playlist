@@ -24,13 +24,21 @@ interface SpeechAnalysisResult {
 
 interface SpeechStudioProps {
   onOpenVoiceAnalysis?: () => void;
+  initialText?: string;
 }
 
-export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis }) => {
+export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis, initialText }) => {
   // Speech text to read
   const [speechText, setSpeechText] = useState(
+    initialText ||
     "Mesdames et messieurs, à l'instant précis où nous sommes réunis dans cette salle, une opportunité historique s'offre à nous.\n\nPourquoi sommes-nous ici ? Non pas pour répéter ce qui a fonctionné hier, mais pour inventer les règles de demain.\n\nPendant des années, on nous a répété que le changement était trop risqué, trop coûteux, trop prématuré. Mais le coût réel, le seul qui menace notre avenir, c'est l'inertie du statu quo.\n\nRegardons les faits : trois projets pilotes, six mois d'expérimentation, et déjà quarante pour cent d'adhésion supplémentaire. Ce n'est plus une théorie : c'est un élan vital.\n\nN'ayons plus peur de notre propre voix. Engageons-nous, agissons ensemble, et faisons de cette vision une réalité dès aujourd'hui !"
   );
+
+  useEffect(() => {
+    if (initialText) {
+      setSpeechText(initialText);
+    }
+  }, [initialText]);
 
   // Teleprompter state
   const [isPrompterRunning, setIsPrompterRunning] = useState(false);

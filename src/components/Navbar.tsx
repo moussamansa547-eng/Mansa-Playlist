@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Mic } from 'lucide-react';
+import { Activity, BookOpen } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: string;
@@ -10,7 +10,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenDiagnostic }) => {
   return (
     <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
         
         {/* Zone 1: Single text wordmark in display face */}
         <button
@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenD
         </button>
 
         {/* Zone 2: 4-5 concise single-line nav links with hover underlines */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-300">
           <button
             onClick={() => onTabChange('parcours')}
             className={`whitespace-nowrap shrink-0 transition-colors py-1 border-b-2 cursor-pointer ${
@@ -34,6 +34,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenD
             }`}
           >
             14 Modules
+          </button>
+
+          <button
+            onClick={() => onTabChange('anthologie')}
+            className={`whitespace-nowrap shrink-0 transition-colors py-1 border-b-2 cursor-pointer ${
+              currentTab === 'anthologie'
+                ? 'border-amber-400 text-white font-semibold'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            100 Discours & Débats
           </button>
 
           <button
@@ -95,23 +106,30 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenD
         {/* Zone 3: 1 single primary action button */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={() => onTabChange('analyse-vocale')}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-amber-400/20 cursor-pointer"
+            onClick={() => onTabChange('anthologie')}
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-amber-400/20 cursor-pointer"
           >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Analyser ma Voix</span>
+            <BookOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">100 Discours & Débats</span>
+            <span className="sm:hidden">Anthologie</span>
           </button>
         </div>
 
       </div>
 
       {/* Mobile nav subrow */}
-      <div className="md:hidden flex items-center justify-around px-2 py-2 border-t border-slate-800 text-xs text-slate-400 bg-slate-950 overflow-x-auto">
+      <div className="lg:hidden flex items-center justify-around px-2 py-2 border-t border-slate-800 text-xs text-slate-400 bg-slate-950 overflow-x-auto gap-2">
         <button
           onClick={() => onTabChange('parcours')}
           className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'parcours' ? 'text-amber-400 font-semibold' : ''}`}
         >
           Modules
+        </button>
+        <button
+          onClick={() => onTabChange('anthologie')}
+          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'anthologie' ? 'text-amber-400 font-semibold' : ''}`}
+        >
+          100 Discours & Débats
         </button>
         <button
           onClick={() => onTabChange('analyse-vocale')}

@@ -11,6 +11,7 @@ import { DebateArena } from './components/DebateArena';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { DiagnosticModal } from './components/DiagnosticModal';
 import { VoiceDeliveryAnalyzer } from './components/VoiceDeliveryAnalyzer';
+import { AnthologySection } from './components/AnthologySection';
 
 import { MODULES_DATA } from './data/modulesData';
 import { INITIAL_USER_PROGRESS } from './data/badgesData';
@@ -22,6 +23,7 @@ export default function App() {
   const [selectedLesson, setSelectedLesson] = useState<LessonContent | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
   const [studioSubTab, setStudioSubTab] = useState<'prompter' | 'vocal' | 'respiration' | 'analyse'>('prompter');
+  const [loadedPrompterText, setLoadedPrompterText] = useState<string | undefined>(undefined);
 
   // Load progress from localStorage or use initial
   const [userProgress, setUserProgress] = useState<UserProgress>(() => {
@@ -114,6 +116,13 @@ export default function App() {
     }
   };
 
+  const handleLoadSpeechToPrompter = (speechText: string, title: string) => {
+    setLoadedPrompterText(speechText);
+    setCurrentTab('studio');
+    setStudioSubTab('prompter');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       
@@ -166,6 +175,14 @@ export default function App() {
               </>
             )}
           </>
+        )}
+
+        {/* 100 DISCOURS & DEBATS ANTHOLOGY TAB */}
+        {currentTab === 'anthologie' && (
+          <AnthologySection
+            onLoadIntoPrompter={handleLoadSpeechToPrompter}
+            onNavigateToTab={(tab) => setCurrentTab(tab)}
+          />
         )}
 
         {/* ANALYSE VOCALE DEDICATED TAB */}
@@ -227,6 +244,7 @@ export default function App() {
 
             {studioSubTab === 'prompter' && (
               <SpeechStudio
+                initialText={loadedPrompterText}
                 onOpenVoiceAnalysis={() => setCurrentTab('analyse-vocale')}
               />
             )}
@@ -277,14 +295,14 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="font-serif-title font-bold text-slate-300">Oratoria</span>
             <span aria-hidden="true">·</span>
-            <span>Académie de Haute Éloquence & Communication</span>
+            <span>Académie de Haute Éloquence & Anthologie des Maîtres</span>
           </div>
           <div className="flex items-center gap-6">
-            <span>Analyseur Acoustique Biomécanique</span>
+            <span>100 Discours Décortiqués</span>
             <span aria-hidden="true">·</span>
-            <span>Cadence 130 WPM</span>
+            <span>100 Débats Historiques</span>
             <span aria-hidden="true">·</span>
-            <span>Contrôle Diaphragmatique</span>
+            <span>Triade d'Aristote</span>
           </div>
         </div>
       </footer>
