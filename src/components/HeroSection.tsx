@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Compass, Sparkles } from 'lucide-react';
 import { LevelType } from '../types/oratory';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   onStartDiagnostic: () => void;
@@ -17,8 +18,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   userLevel,
   diagnosticCompleted
 }) => {
+  const { t, language } = useLanguage();
+
   return (
-    <section className="relative overflow-hidden bg-slate-950 border-b border-slate-800">
+    <section className="relative overflow-hidden bg-slate-950 border-b border-slate-800 transition-colors">
       {/* Background ambient lighting */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-10 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -30,22 +33,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="lg:col-span-7 flex flex-col justify-center">
             
             {/* Clean unboxed metadata with typographic separators */}
-            <div className="flex items-center gap-2 text-xs font-medium text-amber-400 mb-4 tracking-wide">
-              <span>Formation Maître</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-amber-400 mb-4 tracking-wide">
+              <span>{t('hero.kicker.master')}</span>
               <span aria-hidden="true">·</span>
-              <span>14 Modules Certifiants</span>
+              <span>{t('hero.kicker.cert')}</span>
               <span aria-hidden="true">·</span>
-              <span>Studio Vocal & Téléprompteur</span>
+              <span>{t('hero.kicker.studio')}</span>
               <span aria-hidden="true">·</span>
-              <span className="text-slate-400 font-normal">Niveau suggéré : {userLevel}</span>
+              <span className="text-slate-400 font-normal">
+                {t('hero.kicker.suggested')} : {userLevel}
+              </span>
             </div>
 
             <h1 className="font-serif-title text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight text-balance mb-6">
-              Domptez le trac, captivez votre auditoire et faites entendre votre voix.
+              {t('hero.headline')}
             </h1>
 
             <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mb-8">
-              De l'ancrage corporel à l'art des discours magistraux, entraînez votre voix, votre respiration et votre rhétorique à travers des simulations concrètes, des virelangues interactifs et des analyses d'éloquence en temps réel.
+              {t('hero.lead')}
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
@@ -53,7 +58,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onStartVoiceAnalysis}
                 className="min-h-[48px] px-6 py-3 text-sm font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm shadow-amber-400/20 cursor-pointer"
               >
-                <span>Analyser ma Voix en Direct</span>
+                <span>{t('hero.cta.voice')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -62,26 +67,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="min-h-[48px] px-5 py-3 text-sm font-medium text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Compass className="w-4 h-4 text-amber-400" />
-                <span>{diagnosticCompleted ? 'Mon Diagnostic' : 'Diagnostic Initial'}</span>
+                <span>{diagnosticCompleted ? t('hero.cta.myDiagnostic') : t('hero.cta.diagnostic')}</span>
               </button>
 
               <button
                 onClick={onExploreModules}
                 className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>14 Modules</span>
+                <span>{t('hero.cta.modules')}</span>
               </button>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-6 text-xs text-slate-400">
+            <div className="mt-8 pt-6 border-t border-slate-800/80 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-400">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Feedback rhétorique en direct</span>
+                <span>{language === 'fr' ? 'Feedback rhétorique en direct' : 'Live rhetorical feedback'}</span>
               </div>
-              <span aria-hidden="true">·</span>
-              <span>Analyse acoustique WPM</span>
-              <span aria-hidden="true">·</span>
-              <span>100% Pratique & Vocal</span>
+              <span aria-hidden="true" className="hidden sm:inline">·</span>
+              <span>{language === 'fr' ? 'Analyse acoustique WPM' : 'WPM acoustic analysis'}</span>
+              <span aria-hidden="true" className="hidden sm:inline">·</span>
+              <span>{language === 'fr' ? '100% Pratique & Vocal' : '100% Practical & Vocal'}</span>
             </div>
           </div>
 
@@ -99,8 +104,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Overlay note */}
               <div className="absolute bottom-4 left-4 right-4 p-3.5 bg-slate-950/80 backdrop-blur-md border border-slate-800/80 rounded-xl text-xs text-slate-200 flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-amber-300">L'Arène Oratoire en Direct</p>
-                  <p className="text-slate-400 text-[11px]">Respiration · Posture · Intonation · Impact</p>
+                  <p className="font-semibold text-amber-300">
+                    {language === 'fr' ? "L'Arène Oratoire en Direct" : "The Live Oratory Arena"}
+                  </p>
+                  <p className="text-slate-400 text-[11px]">
+                    {language === 'fr' 
+                      ? "Respiration · Posture · Intonation · Impact" 
+                      : "Breathing · Posture · Intonation · Impact"}
+                  </p>
                 </div>
                 <span className="font-mono-data text-amber-400 font-bold text-sm">
                   130 WPM
@@ -114,27 +125,43 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* 4-Column Metric Strip below the hero split */}
         <div className="mt-12 pt-8 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80">
-            <p className="text-xs text-slate-400 font-medium">Programme Global</p>
+            <p className="text-xs text-slate-400 font-medium">
+              {language === 'fr' ? 'Programme Global' : 'Overall Program'}
+            </p>
             <p className="font-mono-data text-2xl font-bold text-white mt-1">14 Modules</p>
-            <p className="text-xs text-slate-400 mt-1">Du trac aux grands débats</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'fr' ? 'Du trac aux grands débats' : 'From stage fright to great debates'}
+            </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80">
-            <p className="text-xs text-slate-400 font-medium">Cadence Optimale</p>
+            <p className="text-xs text-slate-400 font-medium">
+              {language === 'fr' ? 'Cadence Optimale' : 'Optimal Pace'}
+            </p>
             <p className="font-mono-data text-2xl font-bold text-amber-400 mt-1">120 - 140 WPM</p>
-            <p className="text-xs text-slate-400 mt-1">Rythme oratoire mesuré</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'fr' ? 'Rythme oratoire mesuré' : 'Measured speech tempo'}
+            </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80">
-            <p className="text-xs text-slate-400 font-medium">Ateliers Vocaux</p>
-            <p className="font-mono-data text-2xl font-bold text-white mt-1">12 Virelangues</p>
-            <p className="text-xs text-slate-400 mt-1">Métronome & Audio HD</p>
+            <p className="text-xs text-slate-400 font-medium">
+              {language === 'fr' ? 'Anthologie Oratoire' : 'Speech Anthology'}
+            </p>
+            <p className="font-mono-data text-2xl font-bold text-white mt-1">100 Discours</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'fr' ? '100 Débats & Analyses' : '100 Debates & Dissections'}
+            </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80">
-            <p className="text-xs text-slate-400 font-medium">Évaluation</p>
+            <p className="text-xs text-slate-400 font-medium">
+              {language === 'fr' ? 'Évaluation' : 'Evaluation'}
+            </p>
             <p className="font-mono-data text-2xl font-bold text-emerald-400 mt-1">IA & Expert</p>
-            <p className="text-xs text-slate-400 mt-1">Ethos, Pathos et Logos</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'fr' ? 'Ethos, Pathos et Logos' : 'Ethos, Pathos & Logos'}
+            </p>
           </div>
         </div>
 

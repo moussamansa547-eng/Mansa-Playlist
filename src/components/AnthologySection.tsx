@@ -7,6 +7,7 @@ import {
 import { SPEECHES_DATA, DissectedSpeech } from '../data/anthologySpeeches';
 import { DEBATES_DATA, DissectedDebate } from '../data/anthologyDebates';
 import { speakFrench, stopSpeech, playSuccessChime } from '../utils/audioSynthesis';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AnthologySectionProps {
   onLoadIntoPrompter?: (speechText: string, title: string) => void;
@@ -17,6 +18,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
   onLoadIntoPrompter,
   onNavigateToTab
 }) => {
+  const { voiceLang, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'discours' | 'debats'>('discours');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
@@ -34,7 +36,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
-      speakFrench(text, 1.0, () => setIsSpeaking(false));
+      speakFrench(text, 1.0, () => setIsSpeaking(false), voiceLang);
     }
   };
 

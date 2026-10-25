@@ -21,9 +21,11 @@ import { INITIAL_USER_PROGRESS } from './data/badgesData';
 import { LessonContent, UserProgress, LevelType } from './types/oratory';
 import { playSuccessChime } from './utils/audioSynthesis';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 function AppContent() {
+  const { t } = useLanguage();
   const [currentTab, setCurrentTab] = useState<string>('parcours');
   const [selectedLesson, setSelectedLesson] = useState<LessonContent | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
@@ -341,18 +343,20 @@ function AppContent() {
 
       {/* Clean quiet footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-8 mb-16 lg:mb-0 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
             <span className="font-serif-title font-bold text-slate-300">Oratoria</span>
-            <span aria-hidden="true">·</span>
-            <span>Académie de Haute Éloquence & Anthologie des Maîtres</span>
+            <span aria-hidden="true" className="hidden sm:inline">·</span>
+            <span>{t('brand.motto')}</span>
           </div>
-          <div className="flex items-center gap-6">
-            <span>100 Discours Décortiqués</span>
-            <span aria-hidden="true">·</span>
-            <span>100 Débats Historiques</span>
-            <span aria-hidden="true">·</span>
-            <span>Triade d'Aristote</span>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <span>{t('footer.100speeches')}</span>
+            <span aria-hidden="true" className="hidden sm:inline">·</span>
+            <span>{t('footer.100debates')}</span>
+            <span aria-hidden="true" className="hidden sm:inline">·</span>
+            <span className="text-amber-400 font-medium tracking-wide">
+              Alrights reserved by Mansa moussa dan nenne
+            </span>
           </div>
         </div>
       </footer>
@@ -364,7 +368,9 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

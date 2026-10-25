@@ -31,6 +31,7 @@ import {
   playSuccessChime 
 } from '../utils/audioSynthesis';
 import { UserProgress, LevelType } from '../types/oratory';
+import { useLanguage } from '../context/LanguageContext';
 
 interface TongueTwisterSectionProps {
   userProgress: UserProgress;
@@ -41,6 +42,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
   userProgress, 
   onXpEarned 
 }) => {
+  const { voiceLang } = useLanguage();
   // Navigation subtabs
   const [activeSubTab, setActiveSubTab] = useState<'pratique' | 'lecons' | 'catalogue'>('pratique');
 
@@ -141,7 +143,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
       setSpeechSpeed(rate);
       speakFrench(selectedTwister.phrase, rate, () => {
         setIsSpeaking(false);
-      });
+      }, voiceLang);
     }
   };
 

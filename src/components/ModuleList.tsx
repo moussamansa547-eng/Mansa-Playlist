@@ -5,6 +5,7 @@ import {
   Award, Sparkles, Eye, ShieldAlert, Briefcase, Trophy
 } from 'lucide-react';
 import { ModuleData, LessonContent, LevelType } from '../types/oratory';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ModuleListProps {
   modules: ModuleData[];
@@ -19,6 +20,7 @@ export const ModuleList: React.FC<ModuleListProps> = ({
   completedLessons,
   userLevel
 }) => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'Tous' | LevelType>('Tous');
   const [expandedModuleId, setExpandedModuleId] = useState<number | null>(1);
@@ -58,13 +60,13 @@ export const ModuleList: React.FC<ModuleListProps> = ({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
           <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            Curriculum Pédagogique
+            {t('curriculum.kicker')}
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Les 14 Modules Fondateurs
+            {t('curriculum.title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Un cheminement progressif de l'anatomie du trac aux joutes verbales d'élite.
+            {t('curriculum.desc')}
           </p>
         </div>
 
@@ -74,7 +76,7 @@ export const ModuleList: React.FC<ModuleListProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Rechercher une notion..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full min-h-[44px] pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
@@ -82,19 +84,27 @@ export const ModuleList: React.FC<ModuleListProps> = ({
           </div>
 
           <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
-            {(['Tous', 'Débutant', 'Intermédiaire', 'Avancé'] as const).map(lvl => (
-              <button
-                key={lvl}
-                onClick={() => setSelectedFilter(lvl)}
-                className={`min-h-[38px] px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                  selectedFilter === lvl
-                    ? 'bg-amber-400 text-slate-950 font-semibold shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {lvl}
-              </button>
-            ))}
+            {(['Tous', 'Débutant', 'Intermédiaire', 'Avancé'] as const).map(lvl => {
+              const labelMap: Record<string, string> = {
+                'Tous': t('level.all'),
+                'Débutant': t('level.beginner'),
+                'Intermédiaire': t('level.intermediate'),
+                'Avancé': t('level.advanced')
+              };
+              return (
+                <button
+                  key={lvl}
+                  onClick={() => setSelectedFilter(lvl)}
+                  className={`min-h-[38px] px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    selectedFilter === lvl
+                      ? 'bg-amber-400 text-slate-950 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {labelMap[lvl] || lvl}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

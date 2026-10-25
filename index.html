@@ -22,28 +22,57 @@
     <script>
       // Gracefully handle Vite HMR WebSocket connection closed logs in AI Studio preview iframe where HMR is disabled
       (function() {
+        function isViteWsError(args) {
+          if (!args) return false;
+          for (let i = 0; i < args.length; i++) {
+            const a = args[i];
+            if (!a) continue;
+            let str = '';
+            if (typeof a === 'string') {
+              str = a;
+            } else if (typeof a === 'object') {
+              str = (a.message || '') + ' ' + (a.stack || '') + ' ' + (a.name || '') + ' ' + (a.toString ? a.toString() : '');
+            }
+            if (
+              str.includes('WebSocket closed without opened') ||
+              str.includes('WebSocket connection to') ||
+              str.includes('WebSocket is closed before the connection is established') ||
+              (str.includes('WebSocket') && (str.includes('closed') || str.includes('failed')))
+            ) {
+              return true;
+            }
+          }
+          return false;
+        }
+
         const origConsoleError = console.error;
         console.error = function(...args) {
-          if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('WebSocket closed without opened')) {
+          if (isViteWsError(args)) {
             return;
           }
           origConsoleError.apply(console, args);
         };
+
         const origConsoleWarn = console.warn;
         console.warn = function(...args) {
-          if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('WebSocket closed without opened')) {
+          if (isViteWsError(args)) {
             return;
           }
           origConsoleWarn.apply(console, args);
         };
+
         window.addEventListener('unhandledrejection', function(event) {
-          if (event && event.reason && String(event.reason.message || event.reason).includes('WebSocket closed without opened')) {
+          const reason = event ? (event.reason || '') : '';
+          const msg = typeof reason === 'object' ? (reason.message || '') + ' ' + (reason.stack || '') : String(reason);
+          if (msg.includes('WebSocket closed without opened') || (msg.includes('WebSocket') && msg.includes('closed'))) {
             event.preventDefault();
             event.stopImmediatePropagation();
           }
         }, true);
+
         window.addEventListener('error', function(event) {
-          if (event && (String(event.message || '').includes('WebSocket closed without opened') || (event.error && String(event.error).includes('WebSocket closed without opened')))) {
+          const msg = (event ? String(event.message || '') : '') + ' ' + (event && event.error ? String(event.error.stack || event.error.message || '') : '');
+          if (msg.includes('WebSocket closed without opened') || (msg.includes('WebSocket') && msg.includes('closed'))) {
             event.preventDefault();
             event.stopImmediatePropagation();
           }

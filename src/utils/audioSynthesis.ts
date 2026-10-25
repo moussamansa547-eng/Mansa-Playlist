@@ -77,9 +77,10 @@ export function playSuccessChime() {
 }
 
 /**
- * Speak text in French using the Web Speech Synthesis API
+/**
+ * Speak text in French or English using the Web Speech Synthesis API
  */
-export function speakFrench(text: string, rate: number = 1.0, onEnd?: () => void) {
+export function speakFrench(text: string, rate: number = 1.0, onEnd?: () => void, lang: string = 'fr-FR') {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     if (onEnd) onEnd();
     return;
@@ -88,15 +89,16 @@ export function speakFrench(text: string, rate: number = 1.0, onEnd?: () => void
   window.speechSynthesis.cancel(); // Cancel any ongoing speech
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'fr-FR';
+  utterance.lang = lang;
   utterance.rate = rate;
   utterance.pitch = 1.0;
 
-  // Try to find a French voice
+  // Try to find a matching voice for the target language
   const voices = window.speechSynthesis.getVoices();
-  const frenchVoice = voices.find(v => v.lang.startsWith('fr') || v.lang.includes('FR'));
-  if (frenchVoice) {
-    utterance.voice = frenchVoice;
+  const prefix = lang.slice(0, 2).toLowerCase();
+  const targetVoice = voices.find(v => v.lang.toLowerCase().startsWith(prefix));
+  if (targetVoice) {
+    utterance.voice = targetVoice;
   }
 
   if (onEnd) {
