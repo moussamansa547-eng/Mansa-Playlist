@@ -174,6 +174,12 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                       setSelectedSpeech(speech);
                       stopSpeech();
                       setIsSpeaking(false);
+                      if (window.innerWidth < 1024) {
+                        setTimeout(() => {
+                          const el = document.getElementById('dissection-detail-anchor');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 50);
+                      }
                     }}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                       isSelected
@@ -209,6 +215,12 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                       setSelectedDebate(debate);
                       stopSpeech();
                       setIsSpeaking(false);
+                      if (window.innerWidth < 1024) {
+                        setTimeout(() => {
+                          const el = document.getElementById('dissection-detail-anchor');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 50);
+                      }
                     }}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                       isSelected
@@ -239,7 +251,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
         </div>
 
         {/* Right Column (7 cols): Full Analytical Dissection View */}
-        <div className="lg:col-span-7">
+        <div id="dissection-detail-anchor" className="lg:col-span-7 scroll-mt-20">
           {activeTab === 'discours' && selectedSpeech && (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
               

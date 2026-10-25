@@ -69,24 +69,24 @@ export const ModuleList: React.FC<ModuleListProps> = ({
         </div>
 
         {/* Filter controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-60">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Rechercher une notion..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors w-48 sm:w-60"
+              className="w-full min-h-[44px] pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
             {(['Tous', 'Débutant', 'Intermédiaire', 'Avancé'] as const).map(lvl => (
               <button
                 key={lvl}
                 onClick={() => setSelectedFilter(lvl)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                className={`min-h-[38px] px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   selectedFilter === lvl
                     ? 'bg-amber-400 text-slate-950 font-semibold shadow-xs'
                     : 'text-slate-400 hover:text-white'

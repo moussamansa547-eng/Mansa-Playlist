@@ -170,7 +170,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
     }
   };
 
-  // Call the server API for master coach voice diagnostic
+  // Call the server API for master coach voice diagnostic, with resilient offline fallback
   const fetchAiCoachReview = async (data: VoiceAnalysisData) => {
     setIsLoadingAiCoach(true);
     try {
@@ -188,9 +188,51 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
       if (res.ok) {
         const feedback = await res.json();
         setAiCoachFeedback(feedback);
+        return;
       }
+      throw new Error(`HTTP ${res.status}`);
     } catch (e) {
-      console.warn("AI coach feedback failed:", e);
+      console.warn("Using offline master coach synthesis:", e);
+      // Determine weakest and strongest biomechanical axis
+      const scores = [
+        { name: "Variations de Hauteur (Pitch)", score: data.pitch.score, status: data.pitch.assessment },
+        { name: "Débit & Tempo", score: data.pace.score, status: data.pace.assessment },
+        { name: "Cohérence du Volume", score: data.volume.score, status: data.volume.assessment },
+        { name: "Clarté & Articulation", score: data.clarity.score, status: data.clarity.assessment },
+      ];
+      scores.sort((a, b) => a.score - b.score);
+      const lowest = scores[0];
+      const highest = scores[scores.length - 1];
+
+      const offlineFeedback = {
+        diagnostic: `Votre prise de parole affiche une moyenne acoustique de ${data.overallScore}/100. Votre plus grand point fort réside dans : ${highest.name} (${highest.score}/100 - ${highest.status}). La priorité de travail immédiate se situe sur : ${lowest.name} (${lowest.score}/100).`,
+        verdictGlobal: data.overallScore >= 80 
+          ? "Prestation oratoire remarquable ! L'énergie sonore et la musicalité de votre voix captivent l'attention et transmettent une réelle autorité bienveillante."
+          : data.overallScore >= 65
+          ? "Bonne base oratoire avec du potentiel. Le message passe avec clarté, mais un travail ciblé sur la modulation et la respiration permettra d'amplifier l'impact dramatique."
+          : "Prestation timide ou précipitée. La gestion du souffle et la détente laryngée sont nécessaires pour libérer le plein coffre de votre timbre naturel.",
+        prioriteImmediata: `Travailler en priorité ${lowest.name} : ${lowest.status.toLowerCase()}. Concentrez-vous sur la respiration ventrale pour stabiliser l'émission.`,
+        exercicesRecommandes: [
+          {
+            titre: "L'Ancrage Diaphragmatique 4-4-6",
+            description: "Inspirez 4s en gonflant le bas-ventre, bloquez 4s, puis expirez 6s sur un 'Chhh' continu pour caler votre colonne d'air.",
+            repere: "3 cycles avant chaque prise de parole"
+          },
+          {
+            titre: "Le Toboggan d'Inflexion Tonale",
+            description: "Sur la voyelle 'Ouu', glissez doucement du grave à l'aigu puis replongez dans le grave pour élargir votre tessiture sans forcer.",
+            repere: "2 minutes chaque matin"
+          },
+          {
+            titre: "L'Entraînement au Crayon Oratoire",
+            description: "Placez un stylo horizontalement entre vos canines et récitez votre premier paragraphe en articulant chaque consonne avec vigueur.",
+            repere: "1 minute puis répétez sans crayon"
+          }
+        ],
+        citationInspirante: "« La voix est le miroir de l'âme et le plus puissant instrument de persuasion jamais inventé. » — Cicéron"
+      };
+
+      setAiCoachFeedback(offlineFeedback);
     } finally {
       setIsLoadingAiCoach(false);
     }
@@ -276,32 +318,32 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[44px] px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5 text-amber-400" />
             <span>Importer un Audio</span>
           </button>
 
           {/* Benchmark Presets */}
-          <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs">
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl text-xs">
             <span className="px-2 text-slate-500 text-[11px]">Exemples :</span>
             <button
               onClick={() => handleLoadBenchmark('expressif')}
-              className="px-2.5 py-1 text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               title="Voix expressive avec silences et relief"
             >
               Expressif
             </button>
             <button
               onClick={() => handleLoadBenchmark('monotone')}
-              className="px-2.5 py-1 text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               title="Voix plate avec chutes de volume en fin de phrase"
             >
               Monotone
             </button>
             <button
               onClick={() => handleLoadBenchmark('precipite')}
-              className="px-2.5 py-1 text-slate-300 hover:text-white rounded hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               title="Débit trop rapide et intonation agitée"
             >
               Précipité

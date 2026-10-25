@@ -1,5 +1,7 @@
 import React from 'react';
-import { Activity, BookOpen } from 'lucide-react';
+import { BookOpen, Sparkles, Stethoscope } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
   currentTab: string;
@@ -9,21 +11,21 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenDiagnostic }) => {
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 transition-colors">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-6">
         
-        {/* Zone 1: Single text wordmark in display face */}
+        {/* Zone 1: Brand title wordmark */}
         <button
           onClick={() => onTabChange('parcours')}
-          className="text-left font-serif-title text-xl font-bold tracking-tight text-white hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-2 cursor-pointer"
+          className="text-left font-serif-title text-lg sm:text-xl font-bold tracking-tight text-white hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-2 cursor-pointer"
         >
           <span>Oratoria</span>
-          <span className="text-xs font-sans font-normal text-amber-400/80 uppercase tracking-widest hidden sm:inline">
+          <span className="text-[10px] sm:text-xs font-sans font-normal text-amber-400/90 uppercase tracking-widest hidden sm:inline">
             Éloquence
           </span>
         </button>
 
-        {/* Zone 2: 4-5 concise single-line nav links with hover underlines */}
+        {/* Zone 2: Desktop Navigation Links (4-5 primary single-line links) */}
         <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-300">
           <button
             onClick={() => onTabChange('parcours')}
@@ -56,6 +58,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenD
             }`}
           >
             Analyse Vocale
+          </button>
+
+          <button
+            onClick={() => onTabChange('virelangues')}
+            className={`whitespace-nowrap shrink-0 transition-colors py-1 border-b-2 cursor-pointer ${
+              currentTab === 'virelangues'
+                ? 'border-amber-400 text-white font-semibold'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            Virelangues & Diction
           </button>
 
           <button
@@ -101,66 +114,48 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenD
           >
             Progression
           </button>
+
+          <button
+            onClick={() => onTabChange('sheets')}
+            className={`whitespace-nowrap shrink-0 transition-colors py-1 border-b-2 cursor-pointer flex items-center gap-1.5 ${
+              currentTab === 'sheets'
+                ? 'border-emerald-400 text-emerald-300 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-emerald-300'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+            <span>Google Sheets</span>
+          </button>
         </nav>
 
-        {/* Zone 3: 1 single primary action button */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: Actions + ThemeToggle + PWA Install */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Functional Dark/Light Mode Toggle */}
+          <ThemeToggle />
+
+          {/* Diagnostic quick access on mobile/desktop */}
+          <button
+            onClick={onOpenDiagnostic}
+            title="Passer le diagnostic oratoire initial"
+            aria-label="Diagnostic oratoire"
+            className="min-h-[44px] min-w-[44px] px-2.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer"
+          >
+            <Stethoscope className="w-4 h-4 shrink-0" />
+            <span className="hidden xl:inline">Diagnostic</span>
+          </button>
+
+          <PWAInstallButton />
+
           <button
             onClick={() => onTabChange('anthologie')}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-amber-400/20 cursor-pointer"
+            className="flex items-center gap-2 min-h-[44px] px-3 sm:px-3.5 py-2 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-amber-400/20 cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">100 Discours & Débats</span>
-            <span className="sm:hidden">Anthologie</span>
+            <span className="hidden sm:inline">100 Discours</span>
+            <span className="sm:hidden">100</span>
           </button>
         </div>
 
-      </div>
-
-      {/* Mobile nav subrow */}
-      <div className="lg:hidden flex items-center justify-around px-2 py-2 border-t border-slate-800 text-xs text-slate-400 bg-slate-950 overflow-x-auto gap-2">
-        <button
-          onClick={() => onTabChange('parcours')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'parcours' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Modules
-        </button>
-        <button
-          onClick={() => onTabChange('anthologie')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'anthologie' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          100 Discours & Débats
-        </button>
-        <button
-          onClick={() => onTabChange('analyse-vocale')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'analyse-vocale' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Analyse Vocale
-        </button>
-        <button
-          onClick={() => onTabChange('studio')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'studio' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Studio
-        </button>
-        <button
-          onClick={() => onTabChange('constructeur')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'constructeur' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Discours
-        </button>
-        <button
-          onClick={() => onTabChange('debat')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'debat' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Débats
-        </button>
-        <button
-          onClick={() => onTabChange('progres')}
-          className={`px-2 py-1 whitespace-nowrap cursor-pointer ${currentTab === 'progres' ? 'text-amber-400 font-semibold' : ''}`}
-        >
-          Profil
-        </button>
       </div>
     </header>
   );

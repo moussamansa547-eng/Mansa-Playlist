@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Oratoria - Art Oratoire & Communication</title>
     <meta name="description" content="Application immersive et interactive d'apprentissage de l'art oratoire, de l'éloquence, de la maîtrise vocale et de la prise de parole en public." />
+    <meta name="theme-color" content="#020617" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Oratoria" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta property="og:title" content="Oratoria - Art Oratoire & Communication" />
     <meta property="og:description" content="Application immersive et interactive d'apprentissage de l'art oratoire, de l'éloquence, de la maîtrise vocale et de la prise de parole en public." />
     <meta property="og:type" content="website" />
@@ -12,6 +19,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      // Gracefully handle Vite HMR WebSocket connection closed logs in AI Studio preview iframe where HMR is disabled
+      (function() {
+        const origConsoleError = console.error;
+        console.error = function(...args) {
+          if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('WebSocket closed without opened')) {
+            return;
+          }
+          origConsoleError.apply(console, args);
+        };
+        const origConsoleWarn = console.warn;
+        console.warn = function(...args) {
+          if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('WebSocket closed without opened')) {
+            return;
+          }
+          origConsoleWarn.apply(console, args);
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event && event.reason && String(event.reason.message || event.reason).includes('WebSocket closed without opened')) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+        window.addEventListener('error', function(event) {
+          if (event && (String(event.message || '').includes('WebSocket closed without opened') || (event.error && String(event.error).includes('WebSocket closed without opened')))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body class="h-full bg-slate-950 text-slate-100 font-sans">
     <div id="root" class="min-h-full flex flex-col"></div>

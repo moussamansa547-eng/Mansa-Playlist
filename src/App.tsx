@@ -12,13 +12,18 @@ import { ProgressDashboard } from './components/ProgressDashboard';
 import { DiagnosticModal } from './components/DiagnosticModal';
 import { VoiceDeliveryAnalyzer } from './components/VoiceDeliveryAnalyzer';
 import { AnthologySection } from './components/AnthologySection';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { GoogleSheetsHub } from './components/GoogleSheetsHub';
+import { TongueTwisterSection } from './components/TongueTwisterSection';
 
 import { MODULES_DATA } from './data/modulesData';
 import { INITIAL_USER_PROGRESS } from './data/badgesData';
 import { LessonContent, UserProgress, LevelType } from './types/oratory';
 import { playSuccessChime } from './utils/audioSynthesis';
+import { ThemeProvider } from './context/ThemeContext';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
-export default function App() {
+function AppContent() {
   const [currentTab, setCurrentTab] = useState<string>('parcours');
   const [selectedLesson, setSelectedLesson] = useState<LessonContent | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
@@ -107,6 +112,20 @@ export default function App() {
     });
   };
 
+  // Handle tongue twister challenge complete
+  const handleTwisterXpEarned = (xpEarned: number) => {
+    setUserProgress(prev => {
+      const newBadges = prev.unlockedBadges.includes('badge-diction')
+        ? prev.unlockedBadges
+        : [...prev.unlockedBadges, 'badge-diction'];
+      return {
+        ...prev,
+        xp: prev.xp + xpEarned,
+        unlockedBadges: newBadges
+      };
+    });
+  };
+
   const handleNavigateToModule = (moduleId: number) => {
     const mod = MODULES_DATA.find(m => m.id === moduleId);
     if (mod && mod.lessons.length > 0) {
@@ -137,7 +156,7 @@ export default function App() {
       />
 
       {/* Main View Area */}
-      <main className="flex-1">
+      <main className="flex-1 pb-16 lg:pb-0">
         
         {/* PARCOURS TAB */}
         {currentTab === 'parcours' && (
@@ -254,11 +273,24 @@ export default function App() {
                 onNavigateToTab={(tab) => setCurrentTab(tab)}
               />
             )}
-            {studioSubTab === 'vocal' && <VocalLab />}
+            {studioSubTab === 'vocal' && (
+              <TongueTwisterSection 
+                userProgress={userProgress} 
+                onXpEarned={handleTwisterXpEarned} 
+              />
+            )}
             {studioSubTab === 'respiration' && (
               <BreathingSanctuary onSessionComplete={handleBreathingSessionComplete} />
             )}
           </div>
+        )}
+
+        {/* VIRELANGUES TAB */}
+        {currentTab === 'virelangues' && (
+          <TongueTwisterSection 
+            userProgress={userProgress} 
+            onXpEarned={handleTwisterXpEarned} 
+          />
         )}
 
         {/* CONSTRUCTEUR TAB */}
@@ -280,6 +312,11 @@ export default function App() {
           />
         )}
 
+        {/* GOOGLE SHEETS TAB */}
+        {currentTab === 'sheets' && (
+          <GoogleSheetsHub userProgress={userProgress} />
+        )}
+
       </main>
 
       {/* Global Initial Diagnostic Modal */}
@@ -289,8 +326,21 @@ export default function App() {
         onComplete={handleDiagnosticComplete}
       />
 
+      {/* Offline Connectivity Toast */}
+      <OfflineIndicator />
+
+      {/* Primary Fixed Bottom Navigation for Mobile Devices */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        onTabChange={(tab) => {
+          setSelectedLesson(null);
+          setCurrentTab(tab);
+        }}
+        onOpenDiagnostic={() => setIsDiagnosticOpen(true)}
+      />
+
       {/* Clean quiet footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-8 text-xs text-slate-500">
+      <footer className="border-t border-slate-900 bg-slate-950 py-8 mb-16 lg:mb-0 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="font-serif-title font-bold text-slate-300">Oratoria</span>
@@ -308,5 +358,13 @@ export default function App() {
       </footer>
 
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
