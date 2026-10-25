@@ -11,6 +11,7 @@ import {
   VocalTimelineMarker 
 } from '../utils/voiceAnalysisEngine';
 import { playSuccessChime } from '../utils/audioSynthesis';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VoiceDeliveryAnalyzerProps {
   onNavigateToModule?: (moduleId: number) => void;
@@ -21,6 +22,9 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
   onNavigateToModule,
   onNavigateToTab
 }) => {
+  const { language } = useLanguage();
+  const isEn = language === 'en';
+
   // Audio state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -195,41 +199,61 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
       console.warn("Using offline master coach synthesis:", e);
       // Determine weakest and strongest biomechanical axis
       const scores = [
-        { name: "Variations de Hauteur (Pitch)", score: data.pitch.score, status: data.pitch.assessment },
-        { name: "Débit & Tempo", score: data.pace.score, status: data.pace.assessment },
-        { name: "Cohérence du Volume", score: data.volume.score, status: data.volume.assessment },
-        { name: "Clarté & Articulation", score: data.clarity.score, status: data.clarity.assessment },
+        { name: isEn ? "Pitch Variation" : "Variations de Hauteur (Pitch)", score: data.pitch.score, status: data.pitch.assessment },
+        { name: isEn ? "Cadence & Pace" : "Débit & Tempo", score: data.pace.score, status: data.pace.assessment },
+        { name: isEn ? "Volume Consistency" : "Cohérence du Volume", score: data.volume.score, status: data.volume.assessment },
+        { name: isEn ? "Clarity & Articulation" : "Clarté & Articulation", score: data.clarity.score, status: data.clarity.assessment },
       ];
       scores.sort((a, b) => a.score - b.score);
       const lowest = scores[0];
       const highest = scores[scores.length - 1];
 
-      const offlineFeedback = {
+      const offlineFeedback = isEn ? {
+        diagnostic: `Your speech displays an acoustic composite score of ${data.overallScore}/100. Your strongest asset: ${highest.name} (${highest.score}/100 - ${highest.status}). Priority improvement area: ${lowest.name} (${lowest.score}/100).`,
+        verdictGlobal: data.overallScore >= 80 
+          ? "Remarkable vocal delivery! Your dynamic resonance and musical inflection captivate listener attention with warm, authoritative command."
+          : data.overallScore >= 65
+          ? "Solid vocal foundation with high potential. Your core message is clear; deliberate practice on downward inflections and diaphragmatic control will heighten your dramatic presence."
+          : "Hesitant or hurried delivery. Controlled breath support and laryngeal relaxation are needed to unlock your natural resonance.",
+        diagnosticHauteur: data.pitch.score >= 75
+          ? "Expressive pitch agility with natural contour relief. Avoid high-pitch rising endings on assertions."
+          : "Somewhat flat intonation. Introduce intentional pitch leaps on key nouns to maintain engagement.",
+        diagnosticDebit: data.pace.score >= 75
+          ? `Well-calibrated tempo around ${data.pace.wpm} WPM. Silences are placed with intent.`
+          : `Pace (${data.pace.wpm} WPM) requires modulation. Insert deliberate 1.5s pauses before critical takeaways.`,
+        diagnosticVolume: data.volume.score >= 75
+          ? "Solid breath support with consistent dynamic output across phrases."
+          : data.volume.endingDropDetected 
+          ? "Noticeable volume fading at sentence endings. Maintain abdominal engagement until the final syllable."
+          : "Volume is slightly unstable or subdued. Project from the mask rather than pushing from the throat.",
+        diagnosticClarte: data.clarity.score >= 75
+          ? "Crisp consonant plosives and bright vowel distinction."
+          : "Consonants lack mechanical punch. Practice tongue-tip and bilabial percussive drills.",
+        exerciceCleImmediat: "Diaphragmatic Anchoring 4-4-6: Inhale 4s expanding low abdomen, hold 4s, exhale 6s on continuous 'Shhh' to stabilize your vocal column.",
+        prioriteImmediata: `Focus on ${lowest.name}. Engage abdominal breath support to steady your airflow.`
+      } : {
         diagnostic: `Votre prise de parole affiche une moyenne acoustique de ${data.overallScore}/100. Votre plus grand point fort réside dans : ${highest.name} (${highest.score}/100 - ${highest.status}). La priorité de travail immédiate se situe sur : ${lowest.name} (${lowest.score}/100).`,
         verdictGlobal: data.overallScore >= 80 
           ? "Prestation oratoire remarquable ! L'énergie sonore et la musicalité de votre voix captivent l'attention et transmettent une réelle autorité bienveillante."
           : data.overallScore >= 65
           ? "Bonne base oratoire avec du potentiel. Le message passe avec clarté, mais un travail ciblé sur la modulation et la respiration permettra d'amplifier l'impact dramatique."
           : "Prestation timide ou précipitée. La gestion du souffle et la détente laryngée sont nécessaires pour libérer le plein coffre de votre timbre naturel.",
-        prioriteImmediata: `Travailler en priorité ${lowest.name} : ${lowest.status.toLowerCase()}. Concentrez-vous sur la respiration ventrale pour stabiliser l'émission.`,
-        exercicesRecommandes: [
-          {
-            titre: "L'Ancrage Diaphragmatique 4-4-6",
-            description: "Inspirez 4s en gonflant le bas-ventre, bloquez 4s, puis expirez 6s sur un 'Chhh' continu pour caler votre colonne d'air.",
-            repere: "3 cycles avant chaque prise de parole"
-          },
-          {
-            titre: "Le Toboggan d'Inflexion Tonale",
-            description: "Sur la voyelle 'Ouu', glissez doucement du grave à l'aigu puis replongez dans le grave pour élargir votre tessiture sans forcer.",
-            repere: "2 minutes chaque matin"
-          },
-          {
-            titre: "L'Entraînement au Crayon Oratoire",
-            description: "Placez un stylo horizontalement entre vos canines et récitez votre premier paragraphe en articulant chaque consonne avec vigueur.",
-            repere: "1 minute puis répétez sans crayon"
-          }
-        ],
-        citationInspirante: "« La voix est le miroir de l'âme et le plus puissant instrument de persuasion jamais inventé. » — Cicéron"
+        diagnosticHauteur: data.pitch.score >= 75
+          ? "Excellente agilité de hauteur avec un relief mélodique naturel."
+          : "Intonation monotone. Travaillez les variations mélodiques pour captiver l'auditoire.",
+        diagnosticDebit: data.pace.score >= 75
+          ? `Débit équilibré à ${data.pace.wpm} WPM. Silences judicieusement répartis.`
+          : `Débit (${data.pace.wpm} WPM) à moduler. Marquez des pauses franches de 1,5s.`,
+        diagnosticVolume: data.volume.score >= 75
+          ? "Soutien respiratoire solide avec volume stable jusqu'en fin de phrase."
+          : data.volume.endingDropDetected
+          ? "Chutes d'intensité audibles en fin de phrase. Maintenez l'engagement abdominal."
+          : "Volume fluctuant. Projetez la voix depuis le masque sans forcer sur la gorge.",
+        diagnosticClarte: data.clarity.score >= 75
+          ? "Attaques de consonnes percutantes et voyelles nettes."
+          : "Consonnes pâteuses. Musclez les lèvres et la pointe de la langue.",
+        exerciceCleImmediat: "L'Ancrage Diaphragmatique 4-4-6 : Inspirez 4s en gonflant le bas-ventre, bloquez 4s, expirez 6s sur un 'Chhh' continu pour caler votre colonne d'air.",
+        prioriteImmediata: `Travailler en priorité ${lowest.name}. Concentrez-vous sur la respiration ventrale pour stabiliser l'émission.`
       };
 
       setAiCoachFeedback(offlineFeedback);
@@ -296,13 +320,15 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
           <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            Diagnostic Biomécanique & Acoustique
+            {isEn ? "Biomechanical & Acoustic Diagnostic" : "Diagnostic Biomécanique & Acoustique"}
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Analyseur Vocal de Prestation
+            {isEn ? "Vocal Delivery Analyzer" : "Analyseur Vocal de Prestation"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            Évaluez scientifiquement votre intonation, votre débit (WPM), la régularité de votre volume et la clarté de votre articulation pour éliminer vos faiblesses vocales.
+            {isEn 
+              ? "Scientifically evaluate your intonation, speaking rate (WPM), volume consistency, and articulation clarity to eliminate vocal weaknesses."
+              : "Évaluez scientifiquement votre intonation, votre débit (WPM), la régularité de votre volume et la clarté de votre articulation pour éliminer vos faiblesses vocales."}
           </p>
         </div>
 
@@ -321,32 +347,32 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             className="min-h-[44px] px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5 text-amber-400" />
-            <span>Importer un Audio</span>
+            <span>{isEn ? "Upload Audio" : "Importer un Audio"}</span>
           </button>
 
           {/* Benchmark Presets */}
           <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl text-xs">
-            <span className="px-2 text-slate-500 text-[11px]">Exemples :</span>
+            <span className="px-2 text-slate-500 text-[11px]">{isEn ? "Presets:" : "Exemples :"}</span>
             <button
               onClick={() => handleLoadBenchmark('expressif')}
               className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Voix expressive avec silences et relief"
+              title={isEn ? "Expressive voice with silences and relief" : "Voix expressive avec silences et relief"}
             >
-              Expressif
+              {isEn ? "Expressive" : "Expressif"}
             </button>
             <button
               onClick={() => handleLoadBenchmark('monotone')}
               className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Voix plate avec chutes de volume en fin de phrase"
+              title={isEn ? "Flat voice with volume drops at sentence ends" : "Voix plate avec chutes de volume en fin de phrase"}
             >
-              Monotone
+              {isEn ? "Monotone" : "Monotone"}
             </button>
             <button
               onClick={() => handleLoadBenchmark('precipite')}
               className="min-h-[36px] px-3 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Débit trop rapide et intonation agitée"
+              title={isEn ? "Fast speaking pace and nervous intonation" : "Débit trop rapide et intonation agitée"}
             >
-              Précipité
+              {isEn ? "Rushed" : "Précipité"}
             </button>
           </div>
         </div>
@@ -364,7 +390,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
                 className="px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs sm:text-sm rounded-xl flex items-center gap-2.5 transition-all cursor-pointer shadow-lg shadow-red-600/30 active:scale-98"
               >
                 <Mic className="w-5 h-5" />
-                <span>Enregistrer ma Voix</span>
+                <span>{isEn ? "Record My Voice" : "Enregistrer ma Voix"}</span>
               </button>
             ) : (
               <button
@@ -372,7 +398,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
                 className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold text-xs sm:text-sm rounded-xl flex items-center gap-2.5 transition-all cursor-pointer border border-red-500/50 shadow-lg active:scale-98"
               >
                 <Square className="w-5 h-5 fill-current" />
-                <span>Arrêter et Analyser</span>
+                <span>{isEn ? "Stop & Analyze" : "Arrêter et Analyser"}</span>
               </button>
             )}
 
@@ -401,7 +427,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
               <button
                 onClick={togglePlayAudio}
                 className="p-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl transition-colors cursor-pointer shadow-sm"
-                title={isPlaying ? "Pause" : "Écouter l'enregistrement"}
+                title={isPlaying ? "Pause" : (isEn ? "Listen to recording" : "Écouter l'enregistrement")}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </button>
@@ -430,7 +456,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
           <div className="mt-6 pt-6 border-t border-slate-800 text-center py-4">
             <div className="inline-flex items-center gap-3 text-xs font-semibold text-amber-400">
               <Sparkles className="w-4 h-4 animate-spin" />
-              <span>Décodage acoustique : calcul de la hauteur (F0), du débit WPM, de la dynamique et de la clarté...</span>
+              <span>{isEn ? "Acoustic decoding: computing fundamental pitch (F0), speaking rate (WPM), dynamic envelope and clarity..." : "Décodage acoustique : calcul de la hauteur (F0), du débit WPM, de la dynamique et de la clarté..."}</span>
             </div>
           </div>
         )}
@@ -446,34 +472,38 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             {/* 1. Pitch Variation */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 relative overflow-hidden">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="font-semibold uppercase tracking-wider text-amber-400">1. Hauteur Vocale</span>
+                <span className="font-semibold uppercase tracking-wider text-amber-400">
+                  {isEn ? "1. Vocal Pitch" : "1. Hauteur Vocale"}
+                </span>
                 <span className="font-mono-data font-bold text-lg text-white">
                   {analysisData.pitch.score}%
                 </span>
               </div>
               <p className="font-serif-title text-base font-bold text-slate-100">
-                Variation d'Intonation
+                {isEn ? "Intonation Agility" : "Variation d'Intonation"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                 {analysisData.pitch.assessment}
               </p>
               
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono-data text-slate-400">
-                <span>Moyenne: {analysisData.pitch.meanHz} Hz</span>
-                <span>Écart: ±{analysisData.pitch.stdDevHz} Hz</span>
+                <span>{isEn ? "Mean:" : "Moyenne:"} {analysisData.pitch.meanHz} Hz</span>
+                <span>{isEn ? "Dev:" : "Écart:"} ±{analysisData.pitch.stdDevHz} Hz</span>
               </div>
             </div>
 
             {/* 2. Speaking Pace */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 relative overflow-hidden">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="font-semibold uppercase tracking-wider text-sky-400">2. Rythme & Débit</span>
+                <span className="font-semibold uppercase tracking-wider text-sky-400">
+                  {isEn ? "2. Rhythm & Pace" : "2. Rythme & Débit"}
+                </span>
                 <span className="font-mono-data font-bold text-lg text-white">
                   {analysisData.pace.score}%
                 </span>
               </div>
               <p className="font-serif-title text-base font-bold text-slate-100">
-                Cadence de Parole
+                {isEn ? "Speaking Cadence" : "Cadence de Parole"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                 {analysisData.pace.assessment}
@@ -488,22 +518,26 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             {/* 3. Volume Consistency */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 relative overflow-hidden">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="font-semibold uppercase tracking-wider text-emerald-400">3. Volume & Soutien</span>
+                <span className="font-semibold uppercase tracking-wider text-emerald-400">
+                  {isEn ? "3. Volume & Support" : "3. Volume & Soutien"}
+                </span>
                 <span className="font-mono-data font-bold text-lg text-white">
                   {analysisData.volume.score}%
                 </span>
               </div>
               <p className="font-serif-title text-base font-bold text-slate-100">
-                Stabilité du Souffle
+                {isEn ? "Breath Support Stability" : "Stabilité du Souffle"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                 {analysisData.volume.assessment}
               </p>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono-data text-slate-400">
-                <span>Dynamique: {analysisData.volume.dynamicRangeDb} dB</span>
+                <span>{isEn ? "Dynamic:" : "Dynamique:"} {analysisData.volume.dynamicRangeDb} dB</span>
                 <span className={analysisData.volume.endingDropDetected ? 'text-amber-400' : 'text-emerald-400'}>
-                  {analysisData.volume.endingDropDetected ? 'Chutes fin de phrase' : 'Fin de phrase stable'}
+                  {analysisData.volume.endingDropDetected 
+                    ? (isEn ? 'End-of-phrase drop' : 'Chutes fin de phrase')
+                    : (isEn ? 'Stable endings' : 'Fin de phrase stable')}
                 </span>
               </div>
             </div>
@@ -511,20 +545,22 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             {/* 4. Clarity & Enunciation */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 relative overflow-hidden">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="font-semibold uppercase tracking-wider text-purple-400">4. Articulation</span>
+                <span className="font-semibold uppercase tracking-wider text-purple-400">
+                  {isEn ? "4. Articulation" : "4. Articulation"}
+                </span>
                 <span className="font-mono-data font-bold text-lg text-white">
                   {analysisData.clarity.score}%
                 </span>
               </div>
               <p className="font-serif-title text-base font-bold text-slate-100">
-                Netteté & Clarté
+                {isEn ? "Clarity & Enunciation" : "Netteté & Clarté"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                 {analysisData.clarity.assessment}
               </p>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono-data text-slate-400">
-                <span>Percussion: {analysisData.clarity.consonantSharpness}%</span>
+                <span>{isEn ? "Percussion:" : "Percussion:"} {analysisData.clarity.consonantSharpness}%</span>
                 <span>SNR: {analysisData.clarity.snrDb} dB</span>
               </div>
             </div>
@@ -537,10 +573,10 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div>
                 <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                  Courbes Acoustiques & Repères Temporels
+                  {isEn ? "Acoustic Curves & Time Markers" : "Courbes Acoustiques & Repères Temporels"}
                 </span>
                 <h3 className="font-serif-title text-xl font-bold text-white mt-0.5">
-                  Visualisation Dynamique de la Prestation
+                  {isEn ? "Dynamic Performance Visualizer" : "Visualisation Dynamique de la Prestation"}
                 </h3>
               </div>
 
@@ -554,7 +590,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Courbe d'Intonation (Hauteur Hz)
+                  {isEn ? "Intonation Curve (Pitch Hz)" : "Courbe d'Intonation (Hauteur Hz)"}
                 </button>
                 <button
                   onClick={() => setSelectedGraphTab('volume')}
@@ -564,7 +600,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Enveloppe de Volume (dB)
+                  {isEn ? "Volume Envelope (dB)" : "Enveloppe de Volume (dB)"}
                 </button>
               </div>
             </div>
@@ -628,10 +664,10 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
 
               {/* Axis Label */}
               <div className="absolute top-2 left-4 text-[10px] font-mono-data text-slate-500">
-                {selectedGraphTab === 'pitch' ? "▲ Aigu (300 Hz)" : "▲ Fort (0 dB)"}
+                {selectedGraphTab === 'pitch' ? (isEn ? "▲ High (300 Hz)" : "▲ Aigu (300 Hz)") : (isEn ? "▲ Loud (0 dB)" : "▲ Fort (0 dB)")}
               </div>
               <div className="absolute bottom-2 left-4 text-[10px] font-mono-data text-slate-500">
-                {selectedGraphTab === 'pitch' ? "▼ Grave (80 Hz)" : "▼ Faible (-50 dB)"}
+                {selectedGraphTab === 'pitch' ? (isEn ? "▼ Low (80 Hz)" : "▼ Grave (80 Hz)") : (isEn ? "▼ Soft (-50 dB)" : "▼ Faible (-50 dB)")}
               </div>
             </div>
 
@@ -639,7 +675,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             {analysisData.markers.length > 0 && (
               <div className="mt-6 pt-6 border-t border-slate-800">
                 <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">
-                  Points de Vigilance & Succès Détectés sur l'Enregistrement :
+                  {isEn ? "Vocal Highlights & Alerts Detected on Audio:" : "Points de Vigilance & Succès Détectés sur l'Enregistrement :"}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -683,11 +719,11 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
                 <Sparkles className="w-4 h-4" />
-                <span>Diagnostic du Maître de Voix</span>
+                <span>{isEn ? "Master Vocal Coach Diagnostic" : "Diagnostic du Maître de Voix"}</span>
               </div>
 
               <h3 className="font-serif-title text-xl font-bold text-white mb-2">
-                Bilan Pédagogique Personnalisé
+                {isEn ? "Personalized Educational Assessment" : "Bilan Pédagogique Personnalisé"}
               </h3>
 
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 mb-6 font-serif-title italic text-base sm:text-lg text-amber-200/90 leading-relaxed">
@@ -696,22 +732,22 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                  <p className="font-semibold text-amber-400 mb-1">Sur la Hauteur & l'Intonation :</p>
+                  <p className="font-semibold text-amber-400 mb-1">{isEn ? "On Pitch & Intonation:" : "Sur la Hauteur & l'Intonation :"}</p>
                   <p className="text-slate-300 leading-relaxed">{aiCoachFeedback.diagnosticHauteur}</p>
                 </div>
 
                 <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                  <p className="font-semibold text-sky-400 mb-1">Sur le Débit & les Pauses :</p>
+                  <p className="font-semibold text-sky-400 mb-1">{isEn ? "On Cadence & Pauses:" : "Sur le Débit & les Pauses :"}</p>
                   <p className="text-slate-300 leading-relaxed">{aiCoachFeedback.diagnosticDebit}</p>
                 </div>
 
                 <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                  <p className="font-semibold text-emerald-400 mb-1">Sur le Volume & le Souffle :</p>
+                  <p className="font-semibold text-emerald-400 mb-1">{isEn ? "On Volume & Breath Support:" : "Sur le Volume & le Souffle :"}</p>
                   <p className="text-slate-300 leading-relaxed">{aiCoachFeedback.diagnosticVolume}</p>
                 </div>
 
                 <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800">
-                  <p className="font-semibold text-purple-400 mb-1">Sur l'Articulation & la Clarté :</p>
+                  <p className="font-semibold text-purple-400 mb-1">{isEn ? "On Articulation & Clarity:" : "Sur l'Articulation & la Clarté :"}</p>
                   <p className="text-slate-300 leading-relaxed">{aiCoachFeedback.diagnosticClarte}</p>
                 </div>
               </div>
@@ -719,7 +755,7 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
               {/* Immediate practical 2-min drill */}
               <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-400/30 text-xs">
                 <p className="font-bold text-amber-300 uppercase tracking-wider mb-1">
-                  Exercice Physique Immédiat (2 Minutes) :
+                  {isEn ? "Immediate Physical Drill (2 Minutes):" : "Exercice Physique Immédiat (2 Minutes) :"}
                 </p>
                 <p className="text-slate-200 leading-relaxed">
                   {aiCoachFeedback.exerciceCleImmediat}
@@ -731,10 +767,12 @@ export const VoiceDeliveryAnalyzer: React.FC<VoiceDeliveryAnalyzerProps> = ({
           {/* Actionable Recommendations with Direct Module Links */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
             <h3 className="font-serif-title text-lg font-bold text-white mb-2">
-              Plan d'Entraînement Recommandé pour Votre Voix
+              {isEn ? "Recommended Vocal Training Plan" : "Plan d'Entraînement Recommandé pour Votre Voix"}
             </h3>
             <p className="text-xs text-slate-400 mb-6">
-              Modules d'exercices ciblés pour corriger vos points faibles identifiés lors de l'enregistrement.
+              {isEn 
+                ? "Targeted exercise modules to address weaknesses identified during your recording."
+                : "Modules d'exercices ciblés pour corriger vos points faibles identifiés lors de l'enregistrement."}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

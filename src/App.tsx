@@ -23,9 +23,10 @@ import { playSuccessChime } from './utils/audioSynthesis';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { getLocalizedModules } from './services/localizationService';
 
 function AppContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [currentTab, setCurrentTab] = useState<string>('parcours');
   const [selectedLesson, setSelectedLesson] = useState<LessonContent | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
@@ -128,8 +129,10 @@ function AppContent() {
     });
   };
 
+  const localizedModules = getLocalizedModules(language);
+
   const handleNavigateToModule = (moduleId: number) => {
-    const mod = MODULES_DATA.find(m => m.id === moduleId);
+    const mod = localizedModules.find(m => m.id === moduleId);
     if (mod && mod.lessons.length > 0) {
       setSelectedLesson(mod.lessons[0]);
       setCurrentTab('parcours');
@@ -187,7 +190,7 @@ function AppContent() {
                 />
                 <div id="curriculum-anchor">
                   <ModuleList
-                    modules={MODULES_DATA}
+                    modules={localizedModules}
                     onSelectLesson={(lesson) => setSelectedLesson(lesson)}
                     completedLessons={userProgress.completedLessons}
                     userLevel={userProgress.userLevel}
@@ -228,7 +231,7 @@ function AppContent() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Téléprompteur & Discours
+                  {language === 'en' ? 'Teleprompter & Speeches' : 'Téléprompteur & Discours'}
                 </button>
                 <button
                   onClick={() => setStudioSubTab('analyse')}
@@ -238,7 +241,7 @@ function AppContent() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Analyse Acoustique
+                  {language === 'en' ? 'Acoustic Voice Analysis' : 'Analyse Acoustique'}
                 </button>
                 <button
                   onClick={() => setStudioSubTab('vocal')}
@@ -248,7 +251,7 @@ function AppContent() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Laboratoire Vocal & Virelangues
+                  {language === 'en' ? 'Vocal Lab & Twisters' : 'Laboratoire Vocal & Virelangues'}
                 </button>
                 <button
                   onClick={() => setStudioSubTab('respiration')}
@@ -258,7 +261,7 @@ function AppContent() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Sanctuaire Anti-Trac (Souffle)
+                  {language === 'en' ? 'Stage Fright Sanctuary (Breath)' : 'Sanctuaire Anti-Trac (Souffle)'}
                 </button>
               </div>
             </div>

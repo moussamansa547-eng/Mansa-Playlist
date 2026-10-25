@@ -22,23 +22,33 @@ interface SpeechAnalysisResult {
   recommandationProchaine: string;
 }
 
+import { useLanguage } from '../context/LanguageContext';
+
+const DEFAULT_SPEECH_FR = "Mesdames et messieurs, à l'instant précis où nous sommes réunis dans cette salle, une opportunité historique s'offre à nous.\n\nPourquoi sommes-nous ici ? Non pas pour répéter ce qui a fonctionné hier, mais pour inventer les règles de demain.\n\nPendant des années, on nous a répété que le changement était trop risqué, trop coûteux, trop prématuré. Mais le coût réel, le seul qui menace notre avenir, c'est l'inertie du statu quo.\n\nRegardons les faits : trois projets pilotes, six mois d'expérimentation, et déjà quarante pour cent d'adhésion supplémentaire. Ce n'est plus une théorie : c'est un élan vital.\n\nN'ayons plus peur de notre propre voix. Engageons-nous, agissons ensemble, et faisons de cette vision une réalité dès aujourd'hui !";
+
+const DEFAULT_SPEECH_EN = "Ladies and gentlemen, at this very moment as we gather in this room, a historic opportunity stands before us.\n\nWhy are we here? Not to repeat what worked yesterday, but to invent the rules of tomorrow.\n\nFor years, we were told that change was too risky, too costly, too premature. But the real cost, the only one threatening our future, is the inertia of the status quo.\n\nLook at the facts: three pilot projects, six months of trials, and already forty percent more engagement. This is no longer a theory: it is a vital momentum.\n\nLet us no longer fear our own voice. Let us commit, act together, and make this vision a reality starting today!";
+
 interface SpeechStudioProps {
   onOpenVoiceAnalysis?: () => void;
   initialText?: string;
 }
 
 export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis, initialText }) => {
+  const { language } = useLanguage();
+  const isEn = language === 'en';
+
   // Speech text to read
   const [speechText, setSpeechText] = useState(
-    initialText ||
-    "Mesdames et messieurs, à l'instant précis où nous sommes réunis dans cette salle, une opportunité historique s'offre à nous.\n\nPourquoi sommes-nous ici ? Non pas pour répéter ce qui a fonctionné hier, mais pour inventer les règles de demain.\n\nPendant des années, on nous a répété que le changement était trop risqué, trop coûteux, trop prématuré. Mais le coût réel, le seul qui menace notre avenir, c'est l'inertie du statu quo.\n\nRegardons les faits : trois projets pilotes, six mois d'expérimentation, et déjà quarante pour cent d'adhésion supplémentaire. Ce n'est plus une théorie : c'est un élan vital.\n\nN'ayons plus peur de notre propre voix. Engageons-nous, agissons ensemble, et faisons de cette vision une réalité dès aujourd'hui !"
+    initialText || (isEn ? DEFAULT_SPEECH_EN : DEFAULT_SPEECH_FR)
   );
 
   useEffect(() => {
     if (initialText) {
       setSpeechText(initialText);
+    } else {
+      setSpeechText(isEn ? DEFAULT_SPEECH_EN : DEFAULT_SPEECH_FR);
     }
-  }, [initialText]);
+  }, [initialText, isEn]);
 
   // Teleprompter state
   const [isPrompterRunning, setIsPrompterRunning] = useState(false);
@@ -228,10 +238,12 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
       const persuasionScore = Math.round((clarteScore + impactScore + structureScore) / 3);
 
       const figures: string[] = [];
-      if (questionCount > 0) figures.push("Question rhétorique");
-      if (textToAnalyze.toLowerCase().includes("non pas") || textToAnalyze.toLowerCase().includes("mais")) figures.push("Antithèse");
-      if (exclamationCount > 0) figures.push("Exclamation oratoire / Emphase");
-      if (figures.length === 0) figures.push("Rythme ternaire", "Métaphore");
+      if (questionCount > 0) figures.push(isEn ? "Rhetorical question" : "Question rhétorique");
+      if (textToAnalyze.toLowerCase().includes("non pas") || textToAnalyze.toLowerCase().includes("not to") || textToAnalyze.toLowerCase().includes("mais") || textToAnalyze.toLowerCase().includes("but")) {
+        figures.push(isEn ? "Antithesis / Contrast" : "Antithèse");
+      }
+      if (exclamationCount > 0) figures.push(isEn ? "Exclamatory emphasis" : "Exclamation oratoire / Emphase");
+      if (figures.length === 0) figures.push(isEn ? "Rhythmic triad" : "Rythme ternaire", isEn ? "Metaphor" : "Métaphore");
 
       const offlineResult: SpeechAnalysisResult = {
         clarte: clarteScore,
@@ -239,22 +251,35 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
         persuasion: persuasionScore,
         structure: structureScore,
         scoreGlobal: Math.round((clarteScore * 0.25) + (impactScore * 0.3) + (persuasionScore * 0.25) + (structureScore * 0.2)),
-        pointsForts: [
+        pointsForts: isEn ? [
+          `Estimated speaking pace at ${effectiveWpm} WPM (close to the optimal 125-145 WPM window)`,
+          questionCount > 0 ? "Strong audience re-engagement through rhetorical questioning" : "Assertive and committed tone",
+          "Clear thematic structure promoting strong audience recall"
+        ] : [
           `Débit oratoire estimé à ${effectiveWpm} mots/min (très proche de la zone idéale de 125-145 WPM)`,
           questionCount > 0 ? "Excellente relance de l'attention par l'interrogation oratoire" : "Ton assertif et engagé",
           "Structure thématique limpide facilitant la mémorisation pour le public"
         ],
-        axesAmelioration: [
+        axesAmelioration: isEn ? [
+          "Pause for 1.5 seconds after key claims before moving forward",
+          "Deepen downward pitch inflection at sentence ends to project serene authority"
+        ] : [
           "Marquez 1,5 seconde de pause pleine après les affirmations clés avant d'enchaîner",
           "Accentuez la descente d'intonation en fin de phrase pour projeter une autorité sereine"
         ],
         figuresDeStyle: figures,
-        analyseRhetorique: {
+        analyseRhetorique: isEn ? {
+          ethos: "Credibility established through crisp enunciation and assured vocal presence.",
+          pathos: exclamationCount > 0 ? "Communicative warmth and perceptible emotional conviction." : "Sober and measured delivery instilling trust.",
+          logos: "Clear step-by-step argumentation advancing logically toward conclusion."
+        } : {
           ethos: "Crédibilité établie par une articulation soignée et une tonalité assurée.",
           pathos: exclamationCount > 0 ? "Émotion communicative perceptible et implication chaleureuse." : "Tonalité sobre et mesurée stimulant la confiance.",
           logos: "Argumentation structurée en étapes progressives vers la conclusion."
         },
-        recommandationProchaine: "Passez au Laboratoire Vocal pour affiner l'inflexion finale et la résonance de masque."
+        recommandationProchaine: isEn 
+          ? "Proceed to the Vocal Lab to refine downward inflections and mask resonance."
+          : "Passez au Laboratoire Vocal pour affiner l'inflexion finale et la résonance de masque."
       };
 
       setAnalysisResult(offlineResult);
@@ -271,32 +296,34 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
           <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            Studio Oratoire & Scène Virtuelle
+            {isEn ? "Oratory Studio & Virtual Stage" : "Studio Oratoire & Scène Virtuelle"}
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Téléprompteur & Analyse Acoustique
+            {isEn ? "Teleprompter & Acoustic Rehearsal" : "Téléprompteur & Analyse Acoustique"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Répétez en conditions réelles, calibrez votre tempo à 130 WPM et obtenez un retour rhétorique immédiat.
+            {isEn 
+              ? "Rehearse in real conditions, dial in your cadence at 130 WPM, and receive instant rhetorical feedback."
+              : "Répétez en conditions réelles, calibrez votre tempo à 130 WPM et obtenez un retour rhétorique immédiat."}
           </p>
         </div>
 
         {/* Quick metrics */}
         <div className="flex items-center gap-6 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs">
           <div>
-            <span className="text-slate-400">Mots : </span>
+            <span className="text-slate-400">{isEn ? "Words: " : "Mots : "}</span>
             <span className="font-mono-data font-bold text-white">{wordCount}</span>
           </div>
           <span aria-hidden="true" className="text-slate-700">|</span>
           <div>
-            <span className="text-slate-400">Durée estimée : </span>
+            <span className="text-slate-400">{isEn ? "Estimated duration: " : "Durée estimée : "}</span>
             <span className="font-mono-data font-bold text-amber-400">
               {Math.floor(estimatedSeconds / 60)}m {estimatedSeconds % 60}s
             </span>
           </div>
           <span aria-hidden="true" className="text-slate-700">|</span>
           <div>
-            <span className="text-slate-400">Tempo cible : </span>
+            <span className="text-slate-400">{isEn ? "Target pace: " : "Tempo cible : "}</span>
             <span className="font-mono-data font-bold text-emerald-400">{prompterSpeedWpm} WPM</span>
           </div>
         </div>
@@ -322,13 +349,13 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
                   }`}
                 >
                   {isPrompterRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  <span>{isPrompterRunning ? 'Pause Défilement' : 'Démarrer Défilement'}</span>
+                  <span>{isPrompterRunning ? (isEn ? 'Pause Scrolling' : 'Pause Défilement') : (isEn ? 'Start Scrolling' : 'Démarrer Défilement')}</span>
                 </button>
 
                 <button
                   onClick={handleResetPrompter}
                   className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
-                  title="Revenir au début"
+                  title={isEn ? "Rewind to top" : "Revenir au début"}
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -337,7 +364,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {/* Speed & Font adjustments */}
               <div className="flex items-center gap-4 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Vitesse :</span>
+                  <span className="text-slate-400">{isEn ? "Speed:" : "Vitesse :"}</span>
                   <input
                     type="range"
                     min="80"
@@ -353,7 +380,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Taille :</span>
+                  <span className="text-slate-400">{isEn ? "Size:" : "Taille :"}</span>
                   <input
                     type="range"
                     min="18"
@@ -373,10 +400,10 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
             {/* Visual reading line guide */}
             <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 bg-amber-500/5 border-y border-amber-500/20 pointer-events-none z-10 flex items-center justify-between px-4">
               <span className="text-[10px] text-amber-400/60 font-mono-data uppercase tracking-wider">
-                Ligne de Mire
+                {isEn ? "Reading Horizon" : "Ligne de Mire"}
               </span>
               <span className="text-[10px] text-amber-400/60 font-mono-data">
-                Zone de Regard
+                {isEn ? "Gaze Anchor" : "Zone de Regard"}
               </span>
             </div>
 
@@ -404,7 +431,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
                     className="min-h-[44px] px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-sm shadow-red-600/30"
                   >
                     <Mic className="w-4 h-4" />
-                    <span>Enregistrer ma Prestation</span>
+                    <span>{isEn ? "Record Rehearsal" : "Enregistrer ma Prestation"}</span>
                   </button>
                 ) : (
                   <button
@@ -412,7 +439,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
                     className="min-h-[44px] px-4 py-2 bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer border border-red-500/50"
                   >
                     <Square className="w-4 h-4 fill-current" />
-                    <span>Arrêter l'Enregistrement</span>
+                    <span>{isEn ? "Stop Recording" : "Arrêter l'Enregistrement"}</span>
                   </button>
                 )}
 
@@ -430,7 +457,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {audioBlobUrl && (
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400">Réécoute :</span>
+                    <span className="text-xs text-slate-400">{isEn ? "Replay:" : "Réécoute :"}</span>
                     <audio src={audioBlobUrl} controls className="h-8 w-44 sm:w-52" />
                   </div>
                   {onOpenVoiceAnalysis && (
@@ -439,7 +466,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
                       className="px-3 py-1.5 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Analyse Acoustique Complète</span>
+                      <span>{isEn ? "Full Acoustic Analysis" : "Analyse Acoustique Complète"}</span>
                     </button>
                   )}
                 </div>
@@ -453,15 +480,17 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-amber-400" />
-                <span>Texte du Discours (Modifiable)</span>
+                <span>{isEn ? "Speech Script (Editable)" : "Texte du Discours (Modifiable)"}</span>
               </h3>
               <button
                 onClick={() => setSpeechText(
-                  "Chers collègues, nous ne sommes pas ici pour gérer l'existant. Nous sommes ici pour bâtir l'avenir.\n\nTrois vérités s'imposent à nous ce matin : premièrement, l'écoute mutuelle ; deuxièmement, la rapidité d'exécution ; enfin, l'audace de proposer ce que personne n'a osé tenter.\n\nFaisons de cette journée notre point de départ !"
+                  isEn 
+                    ? "Dear colleagues, we are not here to manage what already exists. We are here to architect what is yet to come.\n\nThree truths guide our journey today: active mutual listening, decisive execution, and the boldness to test what no one has attempted before.\n\nLet us make this morning our starting line!"
+                    : "Chers collègues, nous ne sommes pas ici pour gérer l'existant. Nous sommes ici pour bâtir l'avenir.\n\nTrois vérités s'imposent à nous ce matin : premièrement, l'écoute mutuelle ; deuxièmement, la rapidité d'exécution ; enfin, l'audace de proposer ce que personne n'a osé tenter.\n\nFaisons de cette journée notre point de départ !"
                 )}
                 className="text-xs text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
               >
-                Charger un exemple court
+                {isEn ? "Load short sample" : "Charger un exemple court"}
               </button>
             </div>
 
@@ -470,7 +499,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               onChange={(e) => setSpeechText(e.target.value)}
               rows={6}
               className="w-full p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-400 transition-colors leading-relaxed font-sans"
-              placeholder="Collez ou rédigez votre discours ici..."
+              placeholder={isEn ? "Paste or write your speech script here..." : "Collez ou rédigez votre discours ici..."}
             />
           </div>
 
@@ -483,14 +512,16 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl relative overflow-hidden">
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
               <Sparkles className="w-4 h-4" />
-              <span>Analyseur Rhétorique & Éloquence</span>
+              <span>{isEn ? "Rhetorical & Eloquence Analyzer" : "Analyseur Rhétorique & Éloquence"}</span>
             </div>
 
             <h3 className="font-serif-title text-lg font-bold text-white mb-2">
-              Évaluation du Discours
+              {isEn ? "Speech Evaluation" : "Évaluation du Discours"}
             </h3>
             <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-              Passez votre texte ou transcription au crible des maîtres de l'éloquence : clarté, persuasion, détection des figures de style et triade Ethos/Pathos/Logos.
+              {isEn 
+                ? "Examine your script or transcript through classical rhetorical benchmarks: clarity, persuasion, style devices, and Aristotle's Ethos/Pathos/Logos triad."
+                : "Passez votre texte ou transcription au crible des maîtres de l'éloquence : clarté, persuasion, détection des figures de style et triade Ethos/Pathos/Logos."}
             </p>
 
             <button
@@ -503,7 +534,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>{isAnalyzing ? "Analyse en cours..." : "Lancer l'Analyse Pédagogique"}</span>
+              <span>{isAnalyzing ? (isEn ? "Analyzing..." : "Analyse en cours...") : (isEn ? "Run Rhetorical Analysis" : "Lancer l'Analyse Pédagogique")}</span>
             </button>
           </div>
 
@@ -514,8 +545,12 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {/* Overall Score */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div>
-                  <span className="text-xs text-slate-400 font-medium">Score Oratoire Global</span>
-                  <p className="font-serif-title text-lg font-bold text-white">Indice de Maîtrise</p>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {isEn ? "Overall Rhetorical Score" : "Score Oratoire Global"}
+                  </span>
+                  <p className="font-serif-title text-lg font-bold text-white">
+                    {isEn ? "Mastery Index" : "Indice de Maîtrise"}
+                  </p>
                 </div>
                 <div className="text-right">
                   <span className="font-mono-data text-3xl font-bold text-amber-400">
@@ -529,7 +564,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               <div className="space-y-3 text-xs">
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Clarté & Débit</span>
+                    <span>{isEn ? "Clarity & Cadence" : "Clarté & Débit"}</span>
                     <span className="font-mono-data font-bold">{analysisResult.clarte}%</span>
                   </div>
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -539,7 +574,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
 
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Impact & Formules</span>
+                    <span>{isEn ? "Impact & Punchlines" : "Impact & Formules"}</span>
                     <span className="font-mono-data font-bold">{analysisResult.impact}%</span>
                   </div>
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -549,7 +584,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
 
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Force de Persuasion</span>
+                    <span>{isEn ? "Persuasive Force" : "Force de Persuasion"}</span>
                     <span className="font-mono-data font-bold">{analysisResult.persuasion}%</span>
                   </div>
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -559,7 +594,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
 
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Structure & Chute</span>
+                    <span>{isEn ? "Structure & Climax" : "Structure & Chute"}</span>
                     <span className="font-mono-data font-bold">{analysisResult.structure}%</span>
                   </div>
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -571,21 +606,21 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {/* Triade d'Aristote */}
               <div className="pt-4 border-t border-slate-800 space-y-3">
                 <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Équilibre Rhétorique d'Aristote
+                  {isEn ? "Aristotle's Rhetorical Equilibrium" : "Équilibre Rhétorique d'Aristote"}
                 </p>
 
                 <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-xs">
-                  <p className="font-semibold text-sky-400">ETHOS (Crédibilité) :</p>
+                  <p className="font-semibold text-sky-400">ETHOS ({isEn ? "Credibility" : "Crédibilité"}) :</p>
                   <p className="text-slate-400 mt-0.5">{analysisResult.analyseRhetorique.ethos}</p>
                 </div>
 
                 <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-xs">
-                  <p className="font-semibold text-rose-400">PATHOS (Émotion) :</p>
+                  <p className="font-semibold text-rose-400">PATHOS ({isEn ? "Emotion" : "Émotion"}) :</p>
                   <p className="text-slate-400 mt-0.5">{analysisResult.analyseRhetorique.pathos}</p>
                 </div>
 
                 <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-xs">
-                  <p className="font-semibold text-amber-400">LOGOS (Raison) :</p>
+                  <p className="font-semibold text-amber-400">LOGOS ({isEn ? "Reason" : "Raison"}) :</p>
                   <p className="text-slate-400 mt-0.5">{analysisResult.analyseRhetorique.logos}</p>
                 </div>
               </div>
@@ -593,7 +628,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {/* Points forts */}
               <div className="pt-4 border-t border-slate-800">
                 <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
-                  Points Forts Observés
+                  {isEn ? "Observed Strengths" : "Points Forts Observés"}
                 </p>
                 <div className="space-y-1.5 text-xs text-slate-300">
                   {analysisResult.pointsForts.map((pf, idx) => (
@@ -608,7 +643,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
               {/* Axes d'amélioration */}
               <div className="pt-4 border-t border-slate-800">
                 <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
-                  Conseils d'Amélioration Prioritaires
+                  {isEn ? "Priority Action Steps" : "Conseils d'Amélioration Prioritaires"}
                 </p>
                 <div className="space-y-1.5 text-xs text-slate-300">
                   {analysisResult.axesAmelioration.map((axe, idx) => (

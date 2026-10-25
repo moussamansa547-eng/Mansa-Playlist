@@ -19,8 +19,6 @@ import {
   Check
 } from 'lucide-react';
 import { 
-  DETAILED_TONGUE_TWISTERS, 
-  ARTICULATION_LESSONS, 
   DetailedTongueTwister, 
   ArticulationLesson 
 } from '../data/tongueTwisterSectionData';
@@ -32,6 +30,7 @@ import {
 } from '../utils/audioSynthesis';
 import { UserProgress, LevelType } from '../types/oratory';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedTongueTwisters, getLocalizedArticulationLessons } from '../services/localizationService';
 
 interface TongueTwisterSectionProps {
   userProgress: UserProgress;
@@ -42,21 +41,39 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
   userProgress, 
   onXpEarned 
 }) => {
-  const { voiceLang } = useLanguage();
+  const { voiceLang, language } = useLanguage();
+  const isEn = language === 'en';
+
+  const twistersList = getLocalizedTongueTwisters(language);
+  const lessonsList = getLocalizedArticulationLessons(language);
+
   // Navigation subtabs
   const [activeSubTab, setActiveSubTab] = useState<'pratique' | 'lecons' | 'catalogue'>('pratique');
 
   // Student Level Adapter
-  // Map userProgress.userLevel (e.g. 'Débutant', 'Intermédiaire', 'Avancé') to twister difficulty
-  const initialLevelFilter = userProgress?.userLevel || 'Débutant';
+  const initialLevelFilter = userProgress?.userLevel || (isEn ? 'Débutant' : 'Débutant');
   const [selectedLevelFilter, setSelectedLevelFilter] = useState<string>(initialLevelFilter);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('Tous');
 
   // Selected tongue twister for practice
   const [selectedTwister, setSelectedTwister] = useState<DetailedTongueTwister>(() => {
-    const matching = DETAILED_TONGUE_TWISTERS.find(t => t.difficulty === initialLevelFilter);
-    return matching || DETAILED_TONGUE_TWISTERS[0];
+    const matching = twistersList.find(t => t.difficulty === initialLevelFilter);
+    return matching || twistersList[0];
   });
+
+  // Selected lesson in the academy tab
+  const [selectedLesson, setSelectedLesson] = useState<ArticulationLesson>(lessonsList[0]);
+
+  // Sync twister & lesson when language changes
+  useEffect(() => {
+    const freshTwisters = getLocalizedTongueTwisters(language);
+    const freshLessons = getLocalizedArticulationLessons(language);
+    const match = freshTwisters.find(t => t.id === selectedTwister.id) || freshTwisters[0];
+    setSelectedTwister(match);
+    setSelectedLesson(freshLessons[0]);
+    stopSpeech();
+    setIsSpeaking(false);
+  }, [language]);
 
   // Metronome State
   const [isMetronomePlaying, setIsMetronomePlaying] = useState(false);
@@ -84,9 +101,6 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
     }
     return [];
   });
-
-  // Selected lesson in the academy tab
-  const [selectedLesson, setSelectedLesson] = useState<ArticulationLesson>(ARTICULATION_LESSONS[0]);
 
   // Sync BPM when twister changes
   useEffect(() => {
@@ -199,13 +213,24 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
   };
 
   // Filtered twisters according to selected student level and category
-  const filteredTwisters = DETAILED_TONGUE_TWISTERS.filter((t) => {
-    const matchesLevel = selectedLevelFilter === 'Tous' || t.difficulty === selectedLevelFilter;
-    const matchesCategory = selectedCategoryFilter === 'Tous' || t.category === selectedCategoryFilter;
+  const isAllCategory = selectedCategoryFilter === 'Tous' || selectedCategoryFilter === 'All';
+  const isAllLevel = selectedLevelFilter === 'Tous' || selectedLevelFilter === 'All';
+
+  const filteredTwisters = twistersList.filter((t) => {
+    const matchesLevel = isAllLevel || t.difficulty === selectedLevelFilter;
+    const matchesCategory = isAllCategory || t.category === selectedCategoryFilter;
     return matchesLevel && matchesCategory;
   });
 
-  const categories = [
+  const categories = isEn ? [
+    'All',
+    'Sibilants & Fricatives',
+    'Bilabials',
+    'Dentals & Alveolars',
+    'Vowels & Diphthongs',
+    'Consonant Clusters',
+    'Motor Speed Inversions'
+  ] : [
     'Tous',
     'Sifflantes & Chuintantes',
     'Bilabiales',
@@ -215,7 +240,18 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
     'Inversions Motrices'
   ];
 
-  const levels = ['Tous', 'Débutant', 'Intermédiaire', 'Avancé', 'Virtuose'];
+  const levels = isEn 
+    ? ['All', 'Débutant', 'Intermédiaire', 'Avancé', 'Virtuose']
+    : ['Tous', 'Débutant', 'Intermédiaire', 'Avancé', 'Virtuose'];
+
+  const levelLabels: Record<string, string> = {
+    'All': isEn ? 'All Levels' : 'Tous',
+    'Tous': isEn ? 'All Levels' : 'Tous',
+    'Débutant': isEn ? 'Beginner' : 'Débutant',
+    'Intermédiaire': isEn ? 'Intermediate' : 'Intermédiaire',
+    'Avancé': isEn ? 'Advanced' : 'Avancé',
+    'Virtuose': isEn ? 'Virtuoso' : 'Virtuose'
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -225,13 +261,15 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
             <Flame className="w-3.5 h-3.5" />
-            <span>Gymnastique Articulaire & Virelangues</span>
+            <span>{isEn ? "Articulatory Gymnastics & Tongue Twisters" : "Gymnastique Articulaire & Virelangues"}</span>
           </div>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            L'Art des Virelangues & de la Diction Percutante
+            {isEn ? "The Art of Tongue Twisters & Impactful Diction" : "L'Art des Virelangues & de la Diction Percutante"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            Musclez vos lèvres, déverrouillez votre langue et éliminez les bafouillages grâce aux virelangues d'éloquence gradués selon votre niveau.
+            {isEn 
+              ? "Strengthen your lips, liberate your tongue, and eliminate speech stumbles with tiered eloquence tongue twisters tailored to your level."
+              : "Musclez vos lèvres, déverrouillez votre langue et éliminez les bafouillages grâce aux virelangues d'éloquence gradués selon votre niveau."}
           </p>
         </div>
 
@@ -242,11 +280,11 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           </div>
           <div className="text-left">
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-400">Votre profil :</span>
-              <span className="text-xs font-bold text-amber-300 uppercase">{userProgress?.userLevel || 'Débutant'}</span>
+              <span className="text-[11px] text-slate-400">{isEn ? "Your level:" : "Votre profil :"}</span>
+              <span className="text-xs font-bold text-amber-300 uppercase">{levelLabels[userProgress?.userLevel] || userProgress?.userLevel || 'Débutant'}</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              {completedTwisterIds.length} / {DETAILED_TONGUE_TWISTERS.length} virelangues maîtrisés
+              {completedTwisterIds.length} / {twistersList.length} {isEn ? "twisters mastered" : "virelangues maîtrisés"}
             </p>
           </div>
         </div>
@@ -263,7 +301,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           }`}
         >
           <Activity className="w-4 h-4 text-amber-400" />
-          <span>Studio d'Entraînement Pratique</span>
+          <span>{isEn ? "Practice Training Studio" : "Studio d'Entraînement Pratique"}</span>
         </button>
 
         <button
@@ -275,7 +313,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           }`}
         >
           <BookOpen className="w-4 h-4 text-emerald-400" />
-          <span>Académie de l'Articulation (5 Leçons)</span>
+          <span>{isEn ? "Articulation Academy (5 Lessons)" : "Académie de l'Articulation (5 Leçons)"}</span>
         </button>
 
         <button
@@ -287,7 +325,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           }`}
         >
           <Zap className="w-4 h-4 text-sky-400" />
-          <span>Anthologie Complète (21 Virelangues)</span>
+          <span>{isEn ? `Complete Anthology (${twistersList.length} Twisters)` : `Anthologie Complète (${twistersList.length} Virelangues)`}</span>
         </button>
       </div>
 
@@ -303,19 +341,19 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
             {/* Level Filter Bar */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
               <label className="text-xs font-semibold text-slate-300 block mb-2 flex items-center justify-between">
-                <span>Adapter au niveau de l'étudiant :</span>
+                <span>{isEn ? "Adapt to student level:" : "Adapter au niveau de l'étudiant :"}</span>
                 <span className="text-[11px] text-amber-400 font-mono-data font-bold">
-                  {selectedLevelFilter}
+                  {levelLabels[selectedLevelFilter] || selectedLevelFilter}
                 </span>
               </label>
 
               <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
-                {levels.filter(l => l !== 'Tous').map((lvl) => (
+                {levels.filter(l => l !== 'Tous' && l !== 'All').map((lvl) => (
                   <button
                     key={lvl}
                     onClick={() => {
                       setSelectedLevelFilter(lvl);
-                      const match = DETAILED_TONGUE_TWISTERS.find(t => t.difficulty === lvl);
+                      const match = twistersList.find(t => t.difficulty === lvl);
                       if (match) setSelectedTwister(match);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-center ${
@@ -324,7 +362,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {lvl}
+                    {levelLabels[lvl] || lvl}
                   </button>
                 ))}
               </div>
@@ -334,10 +372,10 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-slate-300">
-                  Virelangues ({filteredTwisters.length})
+                  {isEn ? `Tongue Twisters (${filteredTwisters.length})` : `Virelangues (${filteredTwisters.length})`}
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Cliquez pour charger
+                  {isEn ? "Click to load" : "Cliquez pour charger"}
                 </span>
               </div>
 
@@ -369,7 +407,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                         <div className="flex items-center gap-1.5">
                           {isDone && (
                             <span className="text-emerald-400 flex items-center gap-0.5 text-[10px]">
-                              <Check className="w-3 h-3" /> Maîtrisé
+                              <Check className="w-3 h-3" /> {isEn ? "Mastered" : "Maîtrisé"}
                             </span>
                           )}
                           <span className="font-mono-data text-slate-400">{tw.targetBpm} BPM</span>
@@ -404,14 +442,14 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                     selectedTwister.difficulty === 'Intermédiaire' ? 'text-sky-400' :
                     selectedTwister.difficulty === 'Avancé' ? 'text-amber-400' : 'text-purple-400'
                   }`}>
-                    Niveau {selectedTwister.difficulty}
+                    {isEn ? "Level " : "Niveau "} {levelLabels[selectedTwister.difficulty] || selectedTwister.difficulty}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-slate-400 font-mono-data">
-                  <span>Tempo initial : {selectedTwister.startBpm} BPM</span>
+                  <span>{isEn ? "Initial tempo:" : "Tempo initial :"} {selectedTwister.startBpm} BPM</span>
                   <span aria-hidden="true" className="text-slate-700">|</span>
-                  <span className="text-amber-300 font-bold">Cible : {selectedTwister.targetBpm} BPM</span>
+                  <span className="text-amber-300 font-bold">{isEn ? "Target:" : "Cible :"} {selectedTwister.targetBpm} BPM</span>
                 </div>
               </div>
 
@@ -424,7 +462,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                 {/* Syllabic breakdown */}
                 <div className="mt-4 pt-4 border-t border-slate-800/60">
                   <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                    Découpage Syllabique & Pression Articulaire :
+                    {isEn ? "Syllabic Breakdown & Articulatory Pressure:" : "Découpage Syllabique & Pression Articulaire :"}
                   </span>
                   <p className="font-mono-data text-xs sm:text-sm text-amber-300/90 tracking-widest">
                     {selectedTwister.syllabicBreakdown}
@@ -436,7 +474,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-xs">
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
                   <span className="font-semibold text-emerald-400 block mb-1">
-                    🎯 Placement Anatomique & Mâchoire :
+                    🎯 {isEn ? "Anatomical Placement & Jaw Alignment:" : "Placement Anatomique & Mâchoire :"}
                   </span>
                   <p className="text-slate-300 leading-relaxed">
                     {selectedTwister.anatomyTip}
@@ -445,7 +483,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
 
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
                   <span className="font-semibold text-red-400 block mb-1">
-                    ⚠️ Piège Fréquent & Point d'Achoppement :
+                    ⚠️ {isEn ? "Common Pitfall & Tricky Stumble:" : "Piège Fréquent & Point d'Achoppement :"}
                   </span>
                   <p className="text-slate-300 leading-relaxed">
                     {selectedTwister.commonPitfall}
@@ -461,7 +499,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-white uppercase tracking-wider">
-                        Métronome d'Articulation
+                        {isEn ? "Articulation Metronome" : "Métronome d'Articulation"}
                       </span>
                       <span className="font-mono-data text-sm font-bold text-amber-400 px-2 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">
                         {bpm} BPM
@@ -495,12 +533,12 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                       {isMetronomePlaying ? (
                         <>
                           <Pause className="w-3.5 h-3.5" />
-                          <span>Arrêter Métronome</span>
+                          <span>{isEn ? "Stop Metronome" : "Arrêter Métronome"}</span>
                         </>
                       ) : (
                         <>
                           <Play className="w-3.5 h-3.5" />
-                          <span>Démarrer Métronome</span>
+                          <span>{isEn ? "Start Metronome" : "Démarrer Métronome"}</span>
                         </>
                       )}
                     </button>
@@ -537,7 +575,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                   <div className="flex items-center gap-2">
                     <Volume2 className="w-4 h-4 text-sky-400" />
                     <span className="text-xs font-medium text-slate-300">
-                      Écouter le modèle vocal français :
+                      {isEn ? "Listen to voice model (American English):" : "Écouter le modèle vocal français :"}
                     </span>
                   </div>
 
@@ -550,7 +588,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                           : 'bg-slate-800 text-slate-300 hover:text-white'
                       }`}
                     >
-                      0.7x (Lenteur analytique)
+                      {isEn ? "0.7x (Analytical slow)" : "0.7x (Lenteur analytique)"}
                     </button>
 
                     <button
@@ -561,7 +599,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                           : 'bg-slate-800 text-slate-300 hover:text-white'
                       }`}
                     >
-                      1.0x (Tempo naturel)
+                      {isEn ? "1.0x (Natural pace)" : "1.0x (Tempo naturel)"}
                     </button>
 
                     <button
@@ -572,7 +610,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                           : 'bg-slate-800 text-slate-300 hover:text-white'
                       }`}
                     >
-                      1.3x (Défi vitesse)
+                      {isEn ? "1.3x (Speed challenge)" : "1.3x (Défi vitesse)"}
                     </button>
                   </div>
                 </div>
@@ -590,7 +628,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition cursor-pointer border border-slate-700"
                     >
                       <Mic className="w-4 h-4 text-amber-400" />
-                      <span>S'enregistrer au micro</span>
+                      <span>{isEn ? "Record with mic" : "S'enregistrer au micro"}</span>
                     </button>
                   ) : (
                     <button
@@ -598,7 +636,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition cursor-pointer animate-pulse"
                     >
                       <Square className="w-4 h-4 fill-white" />
-                      <span>Terminer ({recordingSeconds}s)</span>
+                      <span>{isEn ? `Finish (${recordingSeconds}s)` : `Terminer (${recordingSeconds}s)`}</span>
                     </button>
                   )}
 
@@ -623,8 +661,8 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
                     {completedTwisterIds.includes(selectedTwister.id)
-                      ? "Virelangue Validé (+40 XP acquis)"
-                      : "Valider le Défi (+40 XP)"}
+                      ? (isEn ? "Twister Validated (+40 XP earned)" : "Virelangue Validé (+40 XP acquis)")
+                      : (isEn ? "Complete Challenge (+40 XP)" : "Valider le Défi (+40 XP)")}
                   </span>
                 </button>
 
@@ -646,10 +684,10 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           {/* Lessons list (4 cols) */}
           <div className="lg:col-span-4 space-y-3">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-              Sommaire Pédagogique :
+              {isEn ? "Curriculum Outline:" : "Sommaire Pédagogique :"}
             </span>
 
-            {ARTICULATION_LESSONS.map((lesson) => {
+            {lessonsList.map((lesson) => {
               const isSelected = selectedLesson.id === lesson.id;
               return (
                 <button
@@ -680,7 +718,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
           <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
               <BookOpen className="w-4 h-4" />
-              <span>Leçon de Diction Oratoire · {selectedLesson.level}</span>
+              <span>{isEn ? "Oratory Diction Lesson" : "Leçon de Diction Oratoire"} · {selectedLesson.level}</span>
             </div>
 
             <h3 className="font-serif-title text-xl sm:text-2xl font-bold text-white mb-4">
@@ -702,7 +740,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
             <div className="space-y-4 pt-6 border-t border-slate-800">
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
                 <span className="font-bold text-amber-300 block mb-1">
-                  💡 Règle d'Or du Praticien :
+                  💡 {isEn ? "Practitioner's Golden Rule:" : "Règle d'Or du Praticien :"}
                 </span>
                 <p className="text-slate-200">
                   {selectedLesson.practicalTip}
@@ -711,7 +749,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
 
               <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
                 <span className="font-bold text-emerald-300 block mb-1">
-                  🏋️ Exercice Physique Immédiat :
+                  🏋️ {isEn ? "Immediate Physical Drill:" : "Exercice Physique Immédiat :"}
                 </span>
                 <p className="text-slate-200">
                   {selectedLesson.drillAction}
@@ -724,7 +762,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                 onClick={() => setActiveSubTab('pratique')}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-semibold shadow-md transition cursor-pointer"
               >
-                <span>Passer aux Exercices Pratiques</span>
+                <span>{isEn ? "Proceed to Practice Drills" : "Passer aux Exercices Pratiques"}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -734,7 +772,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: ANTHOLOGIE COMPLÈTE DES VIRELANGUES (21 ITEMS)                     */}
+      {/* TAB 3: ANTHOLOGIE COMPLÈTE DES VIRELANGUES                                */}
       {/* ========================================================================= */}
       {activeSubTab === 'catalogue' && (
         <div className="space-y-6">
@@ -744,7 +782,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
             
             {/* Level filter tabs */}
             <div className="flex items-center gap-1 overflow-x-auto p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
-              <span className="px-2 text-slate-500 text-[11px] whitespace-nowrap">Niveau :</span>
+              <span className="px-2 text-slate-500 text-[11px] whitespace-nowrap">{isEn ? "Level:" : "Niveau :"}</span>
               {levels.map((lvl) => (
                 <button
                   key={lvl}
@@ -755,7 +793,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {lvl}
+                  {levelLabels[lvl] || lvl}
                 </button>
               ))}
             </div>
@@ -763,7 +801,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
             {/* Category selector */}
             <div className="flex items-center gap-2">
               <label htmlFor="category-select" className="text-xs text-slate-400 whitespace-nowrap">
-                Foyer Anatomique :
+                {isEn ? "Anatomical Focus:" : "Foyer Anatomique :"}
               </label>
               <select
                 id="category-select"
@@ -799,7 +837,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                         tw.difficulty === 'Avancé' ? 'bg-amber-950/60 text-amber-300 border border-amber-800' :
                         'bg-purple-950/60 text-purple-300 border border-purple-800'
                       }`}>
-                        {tw.difficulty}
+                        {levelLabels[tw.difficulty] || tw.difficulty}
                       </span>
                     </div>
 
@@ -820,7 +858,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
 
                   <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                     <span className="text-[11px] font-mono-data text-slate-400">
-                      Cible : {tw.targetBpm} BPM
+                      {isEn ? "Target: " : "Cible : "} {tw.targetBpm} BPM
                     </span>
 
                     <button
@@ -830,7 +868,7 @@ export const TongueTwisterSection: React.FC<TongueTwisterSectionProps> = ({
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-200 text-xs font-semibold transition cursor-pointer"
                     >
-                      <span>S'entraîner</span>
+                      <span>{isEn ? "Practice" : "S'entraîner"}</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>

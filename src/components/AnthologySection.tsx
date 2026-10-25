@@ -4,10 +4,11 @@ import {
   ChevronRight, ArrowRight, Play, CheckCircle2, Shield, 
   Award, Clock, Mic, Compass, Share2, Layers, AlertCircle
 } from 'lucide-react';
-import { SPEECHES_DATA, DissectedSpeech } from '../data/anthologySpeeches';
-import { DEBATES_DATA, DissectedDebate } from '../data/anthologyDebates';
+import { DissectedSpeech } from '../data/anthologySpeeches';
+import { DissectedDebate } from '../data/anthologyDebates';
 import { speakFrench, stopSpeech, playSuccessChime } from '../utils/audioSynthesis';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedSpeeches, getLocalizedDebates } from '../services/localizationService';
 
 interface AnthologySectionProps {
   onLoadIntoPrompter?: (speechText: string, title: string) => void;
@@ -19,13 +20,21 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
   onNavigateToTab
 }) => {
   const { voiceLang, language } = useLanguage();
+  const isEn = language === 'en';
+
+  const speeches = getLocalizedSpeeches(language);
+  const debates = getLocalizedDebates(language);
+
   const [activeTab, setActiveTab] = useState<'discours' | 'debats'>('discours');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
 
-  // Selected item for full deep breakdown modal/drawer
-  const [selectedSpeech, setSelectedSpeech] = useState<DissectedSpeech | null>(SPEECHES_DATA[0]);
-  const [selectedDebate, setSelectedDebate] = useState<DissectedDebate | null>(DEBATES_DATA[0]);
+  // Selected IDs for active items
+  const [selectedSpeechId, setSelectedSpeechId] = useState<string>('mlk-dream');
+  const [selectedDebateId, setSelectedDebateId] = useState<string>('kennedy-nixon-1960');
+
+  const selectedSpeech = speeches.find(s => s.id === selectedSpeechId) || speeches[0];
+  const selectedDebate = debates.find(d => d.id === selectedDebateId) || debates[0];
 
   // Audio speech synthesis state
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -47,9 +56,20 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
     }
   };
 
+  const speechCategories = isEn
+    ? ['All', 'Rights & Freedom', 'Resistance & War', 'Motivation & Sales', 'Vision & Leadership', 'Justice & Advocacy', 'Politics & State']
+    : ['Tous', 'Droits & Libertés', 'Résistance & Guerre', 'Motivation & Vente', 'Vision & Leadership', 'Justice & Plaidoyer', 'Politique & État'];
+
+  const debateCategories = isEn
+    ? ['All', 'Presidential Debates', 'Historic Trials', 'Parliamentary Clashes', 'Philosophical Duels']
+    : ['Tous', 'Débats Présidentiels', 'Procès Historiques', 'Joutes Parlementaires', 'Duels Philosophiques'];
+
+  // Map category filter (handle All / Tous)
+  const isAllCategory = selectedCategory === 'Tous' || selectedCategory === 'All';
+
   // Filtered lists
-  const filteredSpeeches = SPEECHES_DATA.filter(s => {
-    const matchCat = selectedCategory === 'Tous' || s.category === selectedCategory;
+  const filteredSpeeches = speeches.filter(s => {
+    const matchCat = isAllCategory || s.category === selectedCategory;
     const matchSearch = searchQuery === '' ||
       s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.speaker.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,8 +78,8 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
     return matchCat && matchSearch;
   });
 
-  const filteredDebates = DEBATES_DATA.filter(d => {
-    const matchCat = selectedCategory === 'Tous' || d.category === selectedCategory;
+  const filteredDebates = debates.filter(d => {
+    const matchCat = isAllCategory || d.category === selectedCategory;
     const matchSearch = searchQuery === '' ||
       d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.debaters.some(db => db.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -67,9 +87,6 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
       d.context.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
   });
-
-  const speechCategories = ['Tous', 'Droits & Libertés', 'Résistance & Guerre', 'Motivation & Vente', 'Vision & Leadership', 'Justice & Plaidoyer', 'Politique & État'];
-  const debateCategories = ['Tous', 'Débats Présidentiels', 'Procès Historiques', 'Joutes Parlementaires', 'Duels Philosophiques'];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -79,13 +96,15 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">
             <Award className="w-4 h-4" />
-            <span>L'Anthologie des Grands Orateurs</span>
+            <span>{isEn ? "The Master Orators Anthology" : "L'Anthologie des Grands Orateurs"}</span>
           </div>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white">
-            100 Discours & 100 Débats Décortiqués
+            {isEn ? "100 Speeches & 100 Debates Dissected" : "100 Discours & 100 Débats Décortiqués"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            Plongez dans les secrets d'éloquence de Martin Luther King, Sir Winston Churchill, Zig Ziglar, Robert Badinter, Cicéron, Steve Jobs et des plus grands maîtres du verbe.
+            {isEn 
+              ? "Delve into the rhetorical mastery of Martin Luther King, Sir Winston Churchill, Abraham Lincoln, Steve Jobs, Nelson Mandela, and the greatest orators of all time."
+              : "Plongez dans les secrets d'éloquence de Martin Luther King, Sir Winston Churchill, Zig Ziglar, Robert Badinter, Cicéron, Steve Jobs et des plus grands maîtres du verbe."}
           </p>
         </div>
 
@@ -94,7 +113,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
           <button
             onClick={() => {
               setActiveTab('discours');
-              setSelectedCategory('Tous');
+              setSelectedCategory(isEn ? 'All' : 'Tous');
             }}
             className={`px-5 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
               activeTab === 'discours'
@@ -103,13 +122,13 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            <span>100 Discours Magistraux</span>
+            <span>{isEn ? "100 Masterful Speeches" : "100 Discours Magistraux"}</span>
           </button>
 
           <button
             onClick={() => {
               setActiveTab('debats');
-              setSelectedCategory('Tous');
+              setSelectedCategory(isEn ? 'All' : 'Tous');
             }}
             className={`px-5 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
               activeTab === 'debats'
@@ -118,7 +137,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>100 Débats & Joutes Verbales</span>
+            <span>{isEn ? "100 Debates & Verbal Jousts" : "100 Débats & Joutes Verbales"}</span>
           </button>
         </div>
       </div>
@@ -129,7 +148,11 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder={activeTab === 'discours' ? "Rechercher un orateur, discours, citation..." : "Rechercher un débat, protagoniste, réplique..."}
+            placeholder={
+              activeTab === 'discours'
+                ? (isEn ? "Search speaker, speech, quote..." : "Rechercher un orateur, discours, citation...")
+                : (isEn ? "Search debate, protagonist, rebuttal..." : "Rechercher un débat, protagoniste, réplique...")
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
@@ -160,9 +183,11 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2 px-1">
             <span className="font-semibold uppercase tracking-wider">
-              {activeTab === 'discours' ? `Discours Disponibles (${filteredSpeeches.length})` : `Débats Disponibles (${filteredDebates.length})`}
+              {activeTab === 'discours' 
+                ? (isEn ? `Available Speeches (${filteredSpeeches.length})` : `Discours Disponibles (${filteredSpeeches.length})`)
+                : (isEn ? `Available Debates (${filteredDebates.length})` : `Débats Disponibles (${filteredDebates.length})`)}
             </span>
-            <span className="font-mono-data text-[11px]">Cliquez pour décortiquer</span>
+            <span className="font-mono-data text-[11px]">{isEn ? "Click to dissect" : "Cliquez pour décortiquer"}</span>
           </div>
 
           <div className="space-y-3 max-h-[780px] overflow-y-auto pr-1">
@@ -173,7 +198,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                   <div
                     key={speech.id}
                     onClick={() => {
-                      setSelectedSpeech(speech);
+                      setSelectedSpeechId(speech.id);
                       stopSpeech();
                       setIsSpeaking(false);
                       if (window.innerWidth < 1024) {
@@ -214,7 +239,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                   <div
                     key={debate.id}
                     onClick={() => {
-                      setSelectedDebate(debate);
+                      setSelectedDebateId(debate.id);
                       stopSpeech();
                       setIsSpeaking(false);
                       if (window.innerWidth < 1024) {
@@ -272,7 +297,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                 </p>
 
                 <p className="text-xs text-slate-300 mt-4 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-                  <strong className="text-slate-200">Contexte Historique : </strong>
+                  <strong className="text-slate-200">{isEn ? "Historical Context: " : "Contexte Historique : "}</strong>
                   {selectedSpeech.context}
                 </p>
               </div>
@@ -281,14 +306,14 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-400/40 relative">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                    Phrase Choc Immortelle
+                    {isEn ? "Immortal Climax Quote" : "Phrase Choc Immortelle"}
                   </span>
                   <button
                     onClick={() => handleSpeak(selectedSpeech.famousQuote)}
                     className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{isSpeaking ? 'Arrêter' : 'Écouter'}</span>
+                    <span>{isSpeaking ? (isEn ? 'Stop' : 'Arrêter') : (isEn ? 'Listen' : 'Écouter')}</span>
                   </button>
                 </div>
                 <p className="font-serif-title text-lg sm:text-xl font-bold text-white italic leading-relaxed">
@@ -300,20 +325,20 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                   <Layers className="w-4 h-4 text-sky-400" />
-                  <span>Anatomie de la Structure Oratoire</span>
+                  <span>{isEn ? "Oratory Structure Anatomy" : "Anatomie de la Structure Oratoire"}</span>
                 </h4>
 
                 <div className="space-y-3 text-xs leading-relaxed">
                   <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                    <strong className="text-amber-400">1. L'Accroche : </strong>
+                    <strong className="text-amber-400">{isEn ? "1. The Hook: " : "1. L'Accroche : "}</strong>
                     <span className="text-slate-300">{selectedSpeech.structure.accroche}</span>
                   </div>
                   <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                    <strong className="text-sky-400">2. Le Développement : </strong>
+                    <strong className="text-sky-400">{isEn ? "2. The Core Development: " : "2. Le Développement : "}</strong>
                     <span className="text-slate-300">{selectedSpeech.structure.developpement}</span>
                   </div>
                   <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                    <strong className="text-emerald-400">3. La Chute Finale : </strong>
+                    <strong className="text-emerald-400">{isEn ? "3. The Climax / Call to Action: " : "3. La Chute Finale : "}</strong>
                     <span className="text-slate-300">{selectedSpeech.structure.chute}</span>
                   </div>
                 </div>
@@ -323,7 +348,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="space-y-3">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Figures de Style & Procédés Rhétoriques Ciselés</span>
+                  <span>{isEn ? "Rhetorical Devices & Style Figures" : "Figures de Style & Procédés Rhétoriques Ciselés"}</span>
                 </h4>
 
                 <div className="space-y-2.5">
@@ -336,7 +361,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                         "{fig.quote}"
                       </p>
                       <p className="text-slate-400 leading-relaxed">
-                        <strong className="text-slate-300">Analyse du mécanisme : </strong>
+                        <strong className="text-slate-300">{isEn ? "Mechanism analysis: " : "Analyse du mécanisme : "}</strong>
                         {fig.analysis}
                       </p>
                     </div>
@@ -347,20 +372,20 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               {/* Aristotle's Triad */}
               <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-                  Équilibre de la Triade d'Aristote
+                  {isEn ? "Aristotle's Rhetorical Triad" : "Équilibre de la Triade d'Aristote"}
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <p className="font-semibold text-sky-400 mb-1">ETHOS (Légitimité) :</p>
+                    <p className="font-semibold text-sky-400 mb-1">ETHOS ({isEn ? "Credibility" : "Légitimité"}) :</p>
                     <p className="text-slate-300 leading-relaxed text-[11px]">{selectedSpeech.rhetoric.ethos}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <p className="font-semibold text-rose-400 mb-1">PATHOS (Émotion) :</p>
+                    <p className="font-semibold text-rose-400 mb-1">PATHOS ({isEn ? "Emotion" : "Émotion"}) :</p>
                     <p className="text-slate-300 leading-relaxed text-[11px]">{selectedSpeech.rhetoric.pathos}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <p className="font-semibold text-amber-400 mb-1">LOGOS (Logique) :</p>
+                    <p className="font-semibold text-amber-400 mb-1">LOGOS ({isEn ? "Logic" : "Logique"}) :</p>
                     <p className="text-slate-300 leading-relaxed text-[11px]">{selectedSpeech.rhetoric.logos}</p>
                   </div>
                 </div>
@@ -370,18 +395,18 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs space-y-3">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                   <Mic className="w-4 h-4 text-emerald-400" />
-                  <span>Maîtrise Vocale & Scénique Recommandée</span>
+                  <span>{isEn ? "Recommended Vocal & Stage Delivery" : "Maîtrise Vocale & Scénique Recommandée"}</span>
                 </h4>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-slate-500">Cadence Cible :</span>
+                    <span className="text-slate-500">{isEn ? "Target Cadence:" : "Cadence Cible :"}</span>
                     <p className="font-mono-data text-amber-400 font-bold text-base mt-0.5">
                       {selectedSpeech.delivery.targetWpm} WPM
                     </p>
                   </div>
                   <div>
-                    <span className="text-slate-500">Couleur & Timbre :</span>
+                    <span className="text-slate-500">{isEn ? "Tone & Timber:" : "Couleur & Timbre :"}</span>
                     <p className="text-slate-200 font-medium text-xs mt-0.5">
                       {selectedSpeech.delivery.tone}
                     </p>
@@ -390,14 +415,14 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
 
                 <div className="pt-2 border-t border-slate-800/80">
                   <p className="text-slate-400">
-                    <strong className="text-slate-300">Gestion des Silences : </strong>
+                    <strong className="text-slate-300">{isEn ? "Silence & Pause Control: " : "Gestion des Silences : "}</strong>
                     {selectedSpeech.delivery.keyPauses}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-slate-400">
-                    <strong className="text-slate-300">Posture Corporelle : </strong>
+                    <strong className="text-slate-300">{isEn ? "Body Posture: " : "Posture Corporelle : "}</strong>
                     {selectedSpeech.delivery.postureTip}
                   </p>
                 </div>
@@ -407,7 +432,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                    La Règle d'Or de ce Discours
+                    {isEn ? "Golden Rule of this Speech" : "La Règle d'Or de ce Discours"}
                   </span>
                   <p className="text-sm font-serif-title font-bold text-white mt-1">
                     "{selectedSpeech.goldenTakeaway}"
@@ -419,7 +444,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                   className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 whitespace-nowrap shrink-0 flex items-center gap-2 transition-colors cursor-pointer shadow-sm shadow-amber-400/20"
                 >
                   <Play className="w-4 h-4" />
-                  <span>Déclamer au Téléprompteur</span>
+                  <span>{isEn ? "Rehearse in Teleprompter" : "Déclamer au Téléprompteur"}</span>
                 </button>
               </div>
 
@@ -456,7 +481,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-300 mt-4 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-                  <strong className="text-slate-200">Enjeu Historique : </strong>
+                  <strong className="text-slate-200">{isEn ? "Historical Stakes: " : "Enjeu Historique : "}</strong>
                   {selectedDebate.context}
                 </p>
               </div>
@@ -464,7 +489,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               {/* Clash Quote Card */}
               <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/40">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-400">
-                  La Réplique Choc Décisive
+                  {isEn ? "Decisive Clashing Comeback" : "La Réplique Choc Décisive"}
                 </span>
                 <p className="font-serif-title text-lg sm:text-xl font-bold text-white italic mt-1 leading-relaxed">
                   "{selectedDebate.keyClashQuote}"
@@ -475,7 +500,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2 mb-2">
                   <Compass className="w-4 h-4 text-amber-400" />
-                  <span>Le Point de Bascule du Débat</span>
+                  <span>{isEn ? "The Debate Turning Point" : "Le Point de Bascule du Débat"}</span>
                 </h4>
                 <p className="text-slate-300 leading-relaxed">
                   {selectedDebate.turningPoint}
@@ -486,7 +511,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="space-y-3">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                   <Shield className="w-4 h-4 text-sky-400" />
-                  <span>Tactiques Rhétoriques & Biais Décryptés</span>
+                  <span>{isEn ? "Rhetorical Tactics & Biases Decrypted" : "Tactiques Rhétoriques & Biais Décryptés"}</span>
                 </h4>
 
                 <div className="space-y-2">
@@ -495,7 +520,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
                       <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold text-white">
-                          {tac.tactic} <span className="text-slate-400 font-normal">(Employé par {tac.usedBy})</span>
+                          {tac.tactic} <span className="text-slate-400 font-normal">({isEn ? "Used by" : "Employé par"} {tac.usedBy})</span>
                         </p>
                         <p className="text-slate-400 mt-0.5">{tac.effect}</p>
                       </div>
@@ -508,16 +533,16 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               <div className="space-y-3">
                 <h4 className="font-serif-title text-base font-bold text-white flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-emerald-400" />
-                  <span>Anatomie de la Joute Étape par Étape</span>
+                  <span>{isEn ? "Step-by-Step Debate Anatomy" : "Anatomie de la Joute Étape par Étape"}</span>
                 </h4>
 
                 {selectedDebate.breakdownRounds.map((rnd, idx) => (
                   <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
                     <p className="font-bold text-amber-400 text-xs">{rnd.roundTitle}</p>
-                    <p className="text-slate-300"><strong>Thèse : </strong>{rnd.argumentA}</p>
-                    <p className="text-slate-300"><strong>Réfutation : </strong>{rnd.counterArgumentB}</p>
+                    <p className="text-slate-300"><strong>{isEn ? "Thesis: " : "Thèse : "}</strong>{rnd.argumentA}</p>
+                    <p className="text-slate-300"><strong>{isEn ? "Rebuttal: " : "Réfutation : "}</strong>{rnd.counterArgumentB}</p>
                     <p className="text-emerald-300 text-[11px] pt-2 border-t border-slate-800">
-                      <strong>Verdict Tactique : </strong>{rnd.tacticalVerdict}
+                      <strong>{isEn ? "Tactical Verdict: " : "Verdict Tactique : "}</strong>{rnd.tacticalVerdict}
                     </p>
                   </div>
                 ))}
@@ -526,7 +551,7 @@ export const AnthologySection: React.FC<AnthologySectionProps> = ({
               {/* The 3 Oratory Lessons to Learn */}
               <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-3">
-                  Les 3 Lois Oratoires à Retenir pour vos Débats :
+                  {isEn ? "3 Essential Oratory Rules for Your Debates:" : "Les 3 Lois Oratoires à Retenir pour vos Débats :"}
                 </h4>
 
                 <div className="space-y-2 text-xs text-slate-300">

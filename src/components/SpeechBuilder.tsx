@@ -4,8 +4,9 @@ import {
   Clock, Download, FileText, Layers, RefreshCw
 } from 'lucide-react';
 import { SpeechDraft } from '../types/oratory';
+import { useLanguage } from '../context/LanguageContext';
 
-const TEMPLATES: { name: string; description: string; duration: number; draft: Partial<SpeechDraft> }[] = [
+const TEMPLATES_FR: { name: string; description: string; duration: number; draft: Partial<SpeechDraft> }[] = [
   {
     name: "Pitch Projet & Investisseurs (2 min)",
     description: "Modèle SPRI tranchant pour convaincre un comité de direction ou des investisseurs.",
@@ -106,17 +107,125 @@ const TEMPLATES: { name: string; description: string; duration: number; draft: P
   }
 ];
 
+const TEMPLATES_EN: { name: string; description: string; duration: number; draft: Partial<SpeechDraft> }[] = [
+  {
+    name: "Investor & Executive Pitch (2 min)",
+    description: "Sharp SPRI architecture to persuade board directors and key investors.",
+    duration: 2,
+    draft: {
+      title: "Revolutionizing Warehouse Logistics",
+      topic: "Eco-responsible automated warehouse optimization",
+      audience: "Board of directors and chief financial officers",
+      objective: "Secure seed budget for the inaugural pilot facility",
+      targetDurationMinutes: 2,
+      sections: [
+        {
+          id: 'b-1',
+          type: 'accroche',
+          title: "Opening Hook: The Uncomfortable Metric",
+          content: "Every morning, 18% of our commercial freight fleet hits the road half-empty.",
+          estimatedSeconds: 15
+        },
+        {
+          id: 'b-2',
+          type: 'probleme',
+          title: "Problem: The Hidden Cost of Inaction",
+          content: "This is not merely an environmental setback: it bleeds $420,000 in operational margin every year.",
+          estimatedSeconds: 25
+        },
+        {
+          id: 'b-3',
+          type: 'solution',
+          title: "Solution: Dynamic Volume Allocation",
+          content: "We developed an algorithmic load predictor that optimizes cargo distribution in 3 seconds flat. No vehicle departs under 95% capacity.",
+          estimatedSeconds: 35
+        },
+        {
+          id: 'b-4',
+          type: 'preuve',
+          title: "Proof: Results From the Pilot Hub",
+          content: "Across our regional hub last month, impact was instantaneous: a 14% drop in emissions and $35,000 in verified monthly net savings.",
+          estimatedSeconds: 25
+        },
+        {
+          id: 'b-5',
+          type: 'conclusion',
+          title: "Call to Action: The Decisive Vote",
+          content: "Let us stop reacting to escalating fuel spikes. Let us greenlight full deployment across all three facilities today.",
+          estimatedSeconds: 20
+        }
+      ]
+    }
+  },
+  {
+    name: "Inspirational TED Talk (3 min)",
+    description: "Narrative journey anchored in personal vulnerability and universal insight.",
+    duration: 3,
+    draft: {
+      title: "What Silence Taught Me",
+      topic: "The superpower of active listening in a culture of noise",
+      audience: "General audience and emerging storytellers",
+      objective: "Inspire listeners to reclaim unhurried presence and profound listening",
+      targetDurationMinutes: 3,
+      sections: [
+        {
+          id: 't-1',
+          type: 'accroche',
+          title: "Opening Hook: The Unanswered Question",
+          content: "Have you noticed how quickly we cut people off just to talk about ourselves?",
+          estimatedSeconds: 20
+        },
+        {
+          id: 't-2',
+          type: 'probleme',
+          title: "Story: The Day I Lost My Voice",
+          content: "Four years ago, complete vocal chord paralysis forced me into silence for three weeks. I was terrified of being erased.",
+          estimatedSeconds: 40
+        },
+        {
+          id: 't-3',
+          type: 'solution',
+          title: "Epiphany: Discovering the Other",
+          content: "Then something unexpected took place: for the first time in my life, I began to genuinely observe people—hearing their hesitations, their quiet fears, their truths.",
+          estimatedSeconds: 45
+        },
+        {
+          id: 't-4',
+          type: 'preuve',
+          title: "Lesson: The Gravity of Stillness",
+          content: "The most commanding leaders are rarely those who speak the loudest. They are those whose silence gives others the space to exist.",
+          estimatedSeconds: 40
+        },
+        {
+          id: 't-5',
+          type: 'conclusion',
+          title: "Final Punchline: The Gift of Listening",
+          content: "Tonight when you return home, ask someone you love a simple question. And listen all the way to the end, without interrupting once.",
+          estimatedSeconds: 35
+        }
+      ]
+    }
+  }
+];
+
 export const SpeechBuilder: React.FC = () => {
-  const [currentDraft, setCurrentDraft] = useState<SpeechDraft>({
-    id: 'draft-current',
-    title: TEMPLATES[0].draft.title || 'Mon Discours',
-    topic: TEMPLATES[0].draft.topic || '',
-    audience: TEMPLATES[0].draft.audience || '',
-    objective: TEMPLATES[0].draft.objective || '',
-    targetDurationMinutes: TEMPLATES[0].draft.targetDurationMinutes || 2,
-    sections: TEMPLATES[0].draft.sections as any || [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+  const { language } = useLanguage();
+  const isEn = language === 'en';
+  const templates = isEn ? TEMPLATES_EN : TEMPLATES_FR;
+
+  const [currentDraft, setCurrentDraft] = useState<SpeechDraft>(() => {
+    const tmpl = templates[0];
+    return {
+      id: 'draft-current',
+      title: tmpl.draft.title || (isEn ? 'My Speech' : 'Mon Discours'),
+      topic: tmpl.draft.topic || '',
+      audience: tmpl.draft.audience || '',
+      objective: tmpl.draft.objective || '',
+      targetDurationMinutes: tmpl.draft.targetDurationMinutes || 2,
+      sections: tmpl.draft.sections as any || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
   });
 
   const [copied, setCopied] = useState(false);
@@ -130,10 +239,10 @@ export const SpeechBuilder: React.FC = () => {
   // At 130 WPM
   const estimatedSecondsTotal = Math.round((totalWords / 130) * 60);
 
-  const handleApplyTemplate = (tmpl: typeof TEMPLATES[0]) => {
+  const handleApplyTemplate = (tmpl: typeof TEMPLATES_FR[0]) => {
     setCurrentDraft({
       id: 'draft-' + Date.now(),
-      title: tmpl.draft.title || 'Nouveau Discours',
+      title: tmpl.draft.title || (isEn ? 'New Speech' : 'Nouveau Discours'),
       topic: tmpl.draft.topic || '',
       audience: tmpl.draft.audience || '',
       objective: tmpl.draft.objective || '',
@@ -197,13 +306,15 @@ export const SpeechBuilder: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
           <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            Atelier Architectural Oratoire
+            {isEn ? "Oratorical Architecture Studio" : "Atelier Architectural Oratoire"}
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Constructeur de Discours Modulaire
+            {isEn ? "Modular Speech Builder" : "Constructeur de Discours Modulaire"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Agir, déplacer, ordonner et équilibrer les temps de parole de chaque bloc oratoire.
+            {isEn
+              ? "Reorder, balance timing, and craft every rhetorical block with precision."
+              : "Agir, déplacer, ordonner et équilibrer les temps de parole de chaque bloc oratoire."}
           </p>
         </div>
 
@@ -211,7 +322,7 @@ export const SpeechBuilder: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center gap-4">
             <div>
-              <span className="text-slate-400">Total mots : </span>
+              <span className="text-slate-400">{isEn ? "Total words: " : "Total mots : "}</span>
               <span className="font-mono-data font-bold text-white">{totalWords}</span>
             </div>
             <span aria-hidden="true" className="text-slate-700">|</span>
@@ -229,7 +340,7 @@ export const SpeechBuilder: React.FC = () => {
             className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-2 transition-colors cursor-pointer"
           >
             <FileText className="w-4 h-4 text-amber-400" />
-            <span>{showMemoView ? "Mode Édition" : "Fiche Bristol"}</span>
+            <span>{showMemoView ? (isEn ? "Edit Mode" : "Mode Édition") : (isEn ? "Cue Card View" : "Fiche Bristol")}</span>
           </button>
 
           <button
@@ -237,14 +348,14 @@ export const SpeechBuilder: React.FC = () => {
             className="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? "Copié !" : "Copier le Discours"}</span>
+            <span>{copied ? (isEn ? "Copied!" : "Copié !") : (isEn ? "Copy Speech" : "Copier le Discours")}</span>
           </button>
         </div>
       </div>
 
       {/* Templates Selector */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {TEMPLATES.map((tmpl, idx) => (
+        {templates.map((tmpl, idx) => (
           <div
             key={idx}
             className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-colors flex items-center justify-between gap-4"
@@ -262,7 +373,7 @@ export const SpeechBuilder: React.FC = () => {
               onClick={() => handleApplyTemplate(tmpl)}
               className="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Charger Modèle
+              {isEn ? "Load Template" : "Charger Modèle"}
             </button>
           </div>
         ))}
@@ -275,7 +386,9 @@ export const SpeechBuilder: React.FC = () => {
           {/* Metadata Card */}
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div>
-              <label className="block text-slate-400 mb-1 font-medium">Titre du Discours</label>
+              <label className="block text-slate-400 mb-1 font-medium">
+                {isEn ? "Speech Title" : "Titre du Discours"}
+              </label>
               <input
                 type="text"
                 value={currentDraft.title}
@@ -284,23 +397,27 @@ export const SpeechBuilder: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-slate-400 mb-1 font-medium">Auditoire Visé</label>
+              <label className="block text-slate-400 mb-1 font-medium">
+                {isEn ? "Target Audience" : "Auditoire Visé"}
+              </label>
               <input
                 type="text"
                 value={currentDraft.audience}
                 onChange={(e) => setCurrentDraft(prev => ({ ...prev, audience: e.target.value }))}
                 className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-amber-400"
-                placeholder="Ex: Jury de soutenance, collaborateurs..."
+                placeholder={isEn ? "Ex: Board of directors, keynote assembly..." : "Ex: Jury de soutenance, collaborateurs..."}
               />
             </div>
             <div>
-              <label className="block text-slate-400 mb-1 font-medium">Objectif Ultime</label>
+              <label className="block text-slate-400 mb-1 font-medium">
+                {isEn ? "Core Objective" : "Objectif Ultime"}
+              </label>
               <input
                 type="text"
                 value={currentDraft.objective}
                 onChange={(e) => setCurrentDraft(prev => ({ ...prev, objective: e.target.value }))}
                 className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-amber-400"
-                placeholder="Ex: Valider le budget, inspirer..."
+                placeholder={isEn ? "Ex: Unlock budget, inspire team..." : "Ex: Valider le budget, inspirer..."}
               />
             </div>
           </div>
@@ -332,14 +449,14 @@ export const SpeechBuilder: React.FC = () => {
                     {/* Controls */}
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-mono-data text-slate-400 mr-2">
-                        {secWords} mots · ~{secEstSec}s
+                        {secWords} {isEn ? "words" : "mots"} · ~{secEstSec}s
                       </span>
 
                       <button
                         disabled={idx === 0}
                         onClick={() => handleMoveSection(idx, 'up')}
                         className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
-                        title="Monter"
+                        title={isEn ? "Move Up" : "Monter"}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -348,7 +465,7 @@ export const SpeechBuilder: React.FC = () => {
                         disabled={idx === currentDraft.sections.length - 1}
                         onClick={() => handleMoveSection(idx, 'down')}
                         className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
-                        title="Descendre"
+                        title={isEn ? "Move Down" : "Descendre"}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -356,7 +473,7 @@ export const SpeechBuilder: React.FC = () => {
                       <button
                         onClick={() => handleDeleteSection(section.id)}
                         className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
-                        title="Supprimer le bloc"
+                        title={isEn ? "Delete section" : "Supprimer le bloc"}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -367,7 +484,7 @@ export const SpeechBuilder: React.FC = () => {
                     rows={3}
                     value={section.content}
                     onChange={(e) => handleUpdateSection(section.id, 'content', e.target.value)}
-                    placeholder="Rédigez le texte de cette partie..."
+                    placeholder={isEn ? "Draft the narrative content of this block..." : "Rédigez le texte de cette partie..."}
                     className="w-full p-3 bg-slate-950 border border-slate-800/80 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-400 transition-colors leading-relaxed font-sans"
                   />
                 </div>
@@ -382,7 +499,7 @@ export const SpeechBuilder: React.FC = () => {
               className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center gap-2 mx-auto transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>Ajouter un Bloc d'Argumentation</span>
+              <span>{isEn ? "Add Argument Block" : "Ajouter un Bloc d'Argumentation"}</span>
             </button>
           </div>
 
@@ -393,16 +510,16 @@ export const SpeechBuilder: React.FC = () => {
           <div className="border-b border-slate-800 pb-4 mb-6 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-mono-data text-amber-400 uppercase tracking-widest">
-                Fiche Bristol Oratoire
+                {isEn ? "Speaker Cue Card" : "Fiche Bristol Oratoire"}
               </span>
               <h3 className="font-serif-title text-2xl font-bold text-white mt-1">
                 {currentDraft.title}
               </h3>
             </div>
             <div className="text-right text-xs text-slate-400">
-              <p>Objectif : {currentDraft.objective}</p>
+              <p>{isEn ? "Objective: " : "Objectif : "}{currentDraft.objective}</p>
               <p className="font-mono-data text-amber-400 font-bold">
-                Durée : ~{Math.floor(estimatedSecondsTotal / 60)}m {estimatedSecondsTotal % 60}s
+                {isEn ? "Duration: " : "Durée : "}~{Math.floor(estimatedSecondsTotal / 60)}m {estimatedSecondsTotal % 60}s
               </p>
             </div>
           </div>
@@ -424,7 +541,9 @@ export const SpeechBuilder: React.FC = () => {
           </div>
 
           <div className="mt-8 pt-4 border-t border-slate-800 text-center text-xs text-slate-500">
-            Fiche mémo prête pour la scène · Conservez un contact visuel de 80% avec votre auditoire
+            {isEn
+              ? "Stage-ready cue card · Maintain 80% direct eye contact with your audience"
+              : "Fiche mémo prête pour la scène · Conservez un contact visuel de 80% avec votre auditoire"}
           </div>
         </div>
       )}
