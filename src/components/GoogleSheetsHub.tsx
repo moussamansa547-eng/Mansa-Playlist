@@ -35,12 +35,16 @@ import {
 } from '../services/googleSheetsService';
 import { UserProgress } from '../types/oratory';
 import { User } from 'firebase/auth';
+import { useLanguage } from '../context/LanguageContext';
 
 interface GoogleSheetsHubProps {
   userProgress: UserProgress;
 }
 
 export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }) => {
+  const { language } = useLanguage();
+  const isEn = language === 'en';
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [hasToken, setHasToken] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
@@ -186,9 +190,15 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
   const promptCreateSpreadsheet = () => {
     setConfirmationModal({
       isOpen: true,
-      title: "Créer un nouveau classeur Google Sheets",
-      description: "Vous êtes sur le point de créer un nouveau classeur dédié sur votre Google Drive avec la structure oratoire standard.",
-      details: [
+      title: isEn ? "Create New Google Sheet" : "Créer un nouveau classeur Google Sheets",
+      description: isEn 
+        ? "You are about to create a dedicated Oratoria spreadsheet on your Google Drive with the standard oratory schema."
+        : "Vous êtes sur le point de créer un nouveau classeur dédié sur votre Google Drive avec la structure oratoire standard.",
+      details: isEn ? [
+        "Name: Oratoria - Eloquence Journal & Progress",
+        "Sheet 1: « Eloquence Journal » (timestamp, WPM tempo, pitch, clarity, score, diagnostic)",
+        "Sheet 2: « Curriculum Progress » (level, XP, completed modules, honors)"
+      ] : [
         "Nom : Oratoria - Journal d'Éloquence & Suivi",
         "Onglet 1 : « Journal d'Éloquence » (horodatage, débit WPM, pitch, clarté, score, verdict)",
         "Onglet 2 : « Bilan Pédagogique » (niveau, XP, modules validés, distinctions)"
@@ -199,12 +209,14 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
           const newSheet = await createOratoriaSpreadsheet();
           setStatusMessage({ 
             type: 'success', 
-            text: `Classeur « ${newSheet.title} » créé avec succès dans votre Google Drive !` 
+            text: isEn 
+              ? `Spreadsheet « ${newSheet.title} » created successfully in your Google Drive!`
+              : `Classeur « ${newSheet.title} » créé avec succès dans votre Google Drive !` 
           });
           await loadSpreadsheets();
           setSelectedSpreadsheetId(newSheet.spreadsheetId);
         } catch (err: any) {
-          setStatusMessage({ type: 'error', text: err.message || "Échec de création du classeur." });
+          setStatusMessage({ type: 'error', text: err.message || (isEn ? "Failed to create spreadsheet." : "Échec de création du classeur.") });
         } finally {
           setIsExecutingMutation(false);
           setConfirmationModal(null);
@@ -216,15 +228,23 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
   // 2. Append Speech Practice Entry
   const promptAppendSpeechLog = () => {
     if (!selectedSpreadsheetId || !activeDetails) {
-      setStatusMessage({ type: 'error', text: "Veuillez sélectionner un classeur cible d'abord." });
+      setStatusMessage({ type: 'error', text: isEn ? "Please select a target spreadsheet first." : "Veuillez sélectionner un classeur cible d'abord." });
       return;
     }
 
     setConfirmationModal({
       isOpen: true,
-      title: "Enregistrer une prestation dans Google Sheets",
-      description: `Une nouvelle ligne d'évaluation va être insérée dans le classeur « ${activeDetails.title} ».`,
-      details: [
+      title: isEn ? "Log Speech Delivery in Google Sheets" : "Enregistrer une prestation dans Google Sheets",
+      description: isEn 
+        ? `A new evaluation record will be inserted into spreadsheet « ${activeDetails.title} ».`
+        : `Une nouvelle ligne d'évaluation va être insérée dans le classeur « ${activeDetails.title} ».`,
+      details: isEn ? [
+        `Target Sheet: ${activeDetails.title}`,
+        `Target Tab: Eloquence Journal`,
+        `Speech: ${quickLogTitle} (${quickLogType})`,
+        `Metrics: ${quickLogWpm} WPM · Score ${quickLogScore}/100`,
+        `Diagnostic: ${quickLogDiagnostic}`
+      ] : [
         `Classeur cible : ${activeDetails.title}`,
         `Onglet cible : Journal d'Éloquence`,
         `Prestation : ${quickLogTitle} (${quickLogType})`,
@@ -246,11 +266,13 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
           });
           setStatusMessage({ 
             type: 'success', 
-            text: `Prestation enregistrée avec succès dans « ${activeDetails.title} » !` 
+            text: isEn 
+              ? `Speech logged successfully into « ${activeDetails.title} »!`
+              : `Prestation enregistrée avec succès dans « ${activeDetails.title} » !` 
           });
           await loadSpreadsheetContent(selectedSpreadsheetId);
         } catch (err: any) {
-          setStatusMessage({ type: 'error', text: err.message || "Erreur lors de l'enregistrement de la ligne." });
+          setStatusMessage({ type: 'error', text: err.message || (isEn ? "Error logging speech row." : "Erreur lors de l'enregistrement de la ligne.") });
         } finally {
           setIsExecutingMutation(false);
           setConfirmationModal(null);
@@ -262,15 +284,22 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
   // 3. Export Curriculum Progress Snapshot
   const promptExportProgress = () => {
     if (!selectedSpreadsheetId || !activeDetails) {
-      setStatusMessage({ type: 'error', text: "Veuillez sélectionner un classeur cible d'abord." });
+      setStatusMessage({ type: 'error', text: isEn ? "Please select a target spreadsheet first." : "Veuillez sélectionner un classeur cible d'abord." });
       return;
     }
 
     setConfirmationModal({
       isOpen: true,
-      title: "Exporter le bilan de progression dans Google Sheets",
-      description: `Un instantané de votre cursus va être ajouté dans l'onglet « Bilan Pédagogique » de « ${activeDetails.title} ».`,
-      details: [
+      title: isEn ? "Export Progress Snapshot to Google Sheets" : "Exporter le bilan de progression dans Google Sheets",
+      description: isEn 
+        ? `A current progress snapshot will be added to the « Curriculum Progress » tab of « ${activeDetails.title} ».`
+        : `Un instantané de votre cursus va être ajouté dans l'onglet « Bilan Pédagogique » de « ${activeDetails.title} ».`,
+      details: isEn ? [
+        `Current level: ${userProgress.userLevel.toUpperCase()}`,
+        `Accumulated XP: ${userProgress.xp} XP`,
+        `Completed modules: ${userProgress.completedLessons.length}`,
+        `Honors unlocked: ${userProgress.unlockedBadges.length} (${userProgress.unlockedBadges.join(', ')})`
+      ] : [
         `Niveau actuel : ${userProgress.userLevel.toUpperCase()}`,
         `Points XP cumulés : ${userProgress.xp} XP`,
         `Modules complétés : ${userProgress.completedLessons.length}`,
@@ -288,12 +317,12 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
           });
           setStatusMessage({ 
             type: 'success', 
-            text: `Bilan de progression exporté avec succès dans Google Sheets !` 
+            text: isEn ? `Progress snapshot exported successfully to Google Sheets!` : `Bilan de progression exporté avec succès dans Google Sheets !` 
           });
-          setActiveTabName("Bilan Pédagogique");
+          setActiveTabName(isEn ? "Curriculum Progress" : "Bilan Pédagogique");
           await loadSpreadsheetContent(selectedSpreadsheetId);
         } catch (err: any) {
-          setStatusMessage({ type: 'error', text: err.message || "Erreur lors de l'export de progression." });
+          setStatusMessage({ type: 'error', text: err.message || (isEn ? "Error exporting progress." : "Erreur lors de l'export de progression.") });
         } finally {
           setIsExecutingMutation(false);
           setConfirmationModal(null);
@@ -311,14 +340,16 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              Intégration Google Workspace
+              {isEn ? "Google Workspace Integration" : "Intégration Google Workspace"}
             </span>
           </div>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Hub Google Sheets & Journal d'Éloquence
+            {isEn ? "Google Sheets Hub & Eloquence Journal" : "Hub Google Sheets & Journal d'Éloquence"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-            Synchronisez vos prestations oratoires, exportez vos analyses bio-acoustiques et suivez l'évolution de vos scores directement dans vos tableurs Google Drive.
+            {isEn 
+              ? "Synchronize your oratorical deliveries, export bio-acoustic analytics, and track your rhetorical milestones directly in your Google Drive spreadsheets."
+              : "Synchronisez vos prestations oratoires, exportez vos analyses bio-acoustiques et suivez l'évolution de vos scores directement dans vos tableurs Google Drive."}
           </p>
         </div>
 
@@ -339,7 +370,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
               )}
               <div className="text-left">
                 <p className="text-xs font-semibold text-white leading-tight">
-                  {currentUser.displayName || "Compte Google"}
+                  {currentUser.displayName || (isEn ? "Google Account" : "Compte Google")}
                 </p>
                 <p className="text-[11px] text-slate-400 leading-tight">
                   {currentUser.email}
@@ -348,7 +379,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
               <button
                 onClick={handleLogout}
                 className="ml-2 text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-                title="Se déconnecter de Google"
+                title={isEn ? "Disconnect from Google" : "Se déconnecter de Google"}
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -366,7 +397,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
               </svg>
-              <span>{isSigningIn ? "Connexion en cours..." : "Se connecter avec Google"}</span>
+              <span>{isSigningIn ? (isEn ? "Connecting..." : "Connexion en cours...") : (isEn ? "Sign in with Google" : "Se connecter avec Google")}</span>
             </button>
           )}
         </div>
@@ -390,7 +421,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
             onClick={() => setStatusMessage(null)}
             className="text-slate-400 hover:text-white ml-4 text-xs font-semibold"
           >
-            Fermer
+            {isEn ? 'Close' : 'Fermer'}
           </button>
         </div>
       )}
@@ -402,23 +433,37 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
             <FileSpreadsheet className="w-8 h-8" />
           </div>
           <h3 className="font-serif-title text-xl font-bold text-white mb-2">
-            Associez votre Google Drive & Google Sheets
+            {isEn ? 'Link your Google Drive & Google Sheets' : 'Associez votre Google Drive & Google Sheets'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
-            Pour sauvegarder automatiquement vos enregistrements d'élocution, vos statistiques acoustiques et vos rapports de progression dans votre espace Google Drive personnel, veuillez autoriser l'accès avec permission.
+            {isEn
+              ? 'To automatically save your vocal deliveries, acoustic statistics, and progress reports in your personal Google Drive space, please authorize access.'
+              : 'Pour sauvegarder automatiquement vos enregistrements d\'élocution, vos statistiques acoustiques et vos rapports de progression dans votre espace Google Drive personnel, veuillez autoriser l\'accès avec permission.'}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left text-xs text-slate-300">
             <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-              <span className="font-semibold text-emerald-400 block mb-1">Journal Vocal</span>
-              Débit WPM, scores de pitch et constance enregistrés après chaque répétition.
+              <span className="font-semibold text-emerald-400 block mb-1">
+                {isEn ? 'Vocal Log' : 'Journal Vocal'}
+              </span>
+              {isEn
+                ? 'WPM pace, pitch scores, and consistency logged after every rehearsal.'
+                : 'Débit WPM, scores de pitch et constance enregistrés après chaque répétition.'}
             </div>
             <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-              <span className="font-semibold text-amber-400 block mb-1">Bilan Cursus</span>
-              Sauvegarde de vos points XP, niveau et badges débloqués sur 14 modules.
+              <span className="font-semibold text-amber-400 block mb-1">
+                {isEn ? 'Curriculum Summary' : 'Bilan Cursus'}
+              </span>
+              {isEn
+                ? 'Backup of your XP points, level, and unlocked honors across 14 modules.'
+                : 'Sauvegarde de vos points XP, niveau et badges débloqués sur 14 modules.'}
             </div>
             <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-              <span className="font-semibold text-cyan-400 block mb-1">Sécurisé & Privé</span>
-              Vos classeurs restent sous votre contrôle exclusif dans votre Drive.
+              <span className="font-semibold text-cyan-400 block mb-1">
+                {isEn ? 'Secure & Private' : 'Sécurisé & Privé'}
+              </span>
+              {isEn
+                ? 'Your spreadsheets remain under your exclusive control in your Google Drive.'
+                : 'Vos classeurs restent sous votre contrôle exclusif dans votre Drive.'}
             </div>
           </div>
           <button
@@ -432,7 +477,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
               <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
-            <span>Connexion Google Workspace</span>
+            <span>{isEn ? 'Sign in with Google Workspace' : 'Connexion Google Workspace'}</span>
           </button>
         </div>
       ) : (
@@ -446,7 +491,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
             <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3">
               <label htmlFor="spreadsheet-select" className="text-xs font-semibold text-slate-300 whitespace-nowrap flex items-center gap-1.5">
                 <Database className="w-4 h-4 text-emerald-400" />
-                Classeur Google Sheets actif :
+                {isEn ? 'Active Google Sheet:' : 'Classeur Google Sheets actif :'}
               </label>
               
               <div className="relative flex-1 max-w-md">
@@ -458,7 +503,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
                 >
                   {spreadsheets.length === 0 ? (
-                    <option value="">Aucun classeur trouvé</option>
+                    <option value="">{isEn ? 'No spreadsheet found' : 'Aucun classeur trouvé'}</option>
                   ) : (
                     spreadsheets.map((file) => (
                       <option key={file.id} value={file.id}>
@@ -473,7 +518,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 onClick={loadSpreadsheets}
                 disabled={isLoadingList}
                 className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors shrink-0"
-                title="Actualiser la liste Google Drive"
+                title={isEn ? 'Refresh Google Drive list' : 'Actualiser la liste Google Drive'}
               >
                 <RefreshCw className={`w-4 h-4 ${isLoadingList ? 'animate-spin' : ''}`} />
               </button>
@@ -486,7 +531,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Nouveau Carnet Oratoria</span>
+                <span>{isEn ? 'New Oratoria Sheet' : 'Nouveau Carnet Oratoria'}</span>
               </button>
 
               {activeDetails && (
@@ -496,7 +541,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-xl border border-slate-700 transition-colors"
                 >
-                  <span>Ouvrir dans Google Sheets</span>
+                  <span>{isEn ? 'Open in Google Sheets' : 'Ouvrir dans Google Sheets'}</span>
                   <ExternalLink className="w-3 h-3 text-slate-400" />
                 </a>
               )}
@@ -512,18 +557,18 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 <div className="flex items-center gap-2">
                   <Mic2 className="w-4 h-4 text-amber-400" />
                   <h4 className="text-sm font-semibold text-white">
-                    Enregistrer une Prestation dans le Journal
+                    {isEn ? 'Log Speech Performance in Journal' : 'Enregistrer une Prestation dans le Journal'}
                   </h4>
                 </div>
                 <span className="text-[11px] text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
-                  Onglet : Journal d'Éloquence
+                  {isEn ? "Tab: Speech Log" : "Onglet : Journal d'Éloquence"}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 block mb-1">
-                    Titre ou Sujet du discours
+                    {isEn ? 'Speech title or topic' : 'Titre ou Sujet du discours'}
                   </label>
                   <input
                     type="text"
@@ -535,24 +580,24 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
 
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 block mb-1">
-                    Format de prise de parole
+                    {isEn ? 'Speaking format' : 'Format de prise de parole'}
                   </label>
                   <select
                     value={quickLogType}
                     onChange={(e) => setQuickLogType(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
                   >
-                    <option value="Discours préparé">Discours préparé</option>
-                    <option value="Improvisation">Improvisation libre</option>
-                    <option value="Débat contradictoire">Débat contradictoire</option>
-                    <option value="Pitch de projet">Pitch de projet</option>
-                    <option value="Lecture au téléprompteur">Lecture au téléprompteur</option>
+                    <option value="Discours préparé">{isEn ? 'Prepared speech' : 'Discours préparé'}</option>
+                    <option value="Improvisation">{isEn ? 'Free improvisation' : 'Improvisation libre'}</option>
+                    <option value="Débat contradictoire">{isEn ? 'Cross-examination debate' : 'Débat contradictoire'}</option>
+                    <option value="Pitch de projet">{isEn ? 'Project pitch' : 'Pitch de projet'}</option>
+                    <option value="Lecture au téléprompteur">{isEn ? 'Teleprompter reading' : 'Lecture au téléprompteur'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 block mb-1">
-                    Débit moyen mesuré (WPM)
+                    {isEn ? 'Measured average pace (WPM)' : 'Débit moyen mesuré (WPM)'}
                   </label>
                   <input
                     type="number"
@@ -564,7 +609,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
 
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 block mb-1">
-                    Score Global (/100)
+                    {isEn ? 'Overall Score (/100)' : 'Score Global (/100)'}
                   </label>
                   <input
                     type="number"
@@ -578,7 +623,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
 
                 <div className="sm:col-span-2">
                   <label className="text-[11px] font-medium text-slate-400 block mb-1">
-                    Diagnostic et axes d'amélioration notés
+                    {isEn ? 'Diagnostic & improvement feedback' : "Diagnostic et axes d'amélioration notés"}
                   </label>
                   <input
                     type="text"
@@ -591,7 +636,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
                 <span className="text-[11px] text-slate-400">
-                  Insertion sécurisée avec confirmation obligatoire
+                  {isEn ? 'Secure append with mandatory confirmation' : 'Insertion sécurisée avec confirmation obligatoire'}
                 </span>
                 <button
                   onClick={promptAppendSpeechLog}
@@ -599,7 +644,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                   className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Ajouter au classeur</span>
+                  <span>{isEn ? 'Add to Sheet' : 'Ajouter au classeur'}</span>
                 </button>
               </div>
             </div>
@@ -610,30 +655,36 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 <div className="flex items-center gap-2 mb-4">
                   <Award className="w-4 h-4 text-emerald-400" />
                   <h4 className="text-sm font-semibold text-white">
-                    Instantané du Cursus Oratoria
+                    {isEn ? 'Oratoria Curriculum Snapshot' : 'Instantané du Cursus Oratoria'}
                   </h4>
                 </div>
 
                 <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                  Exportez l'état actuel de votre apprentissage dans l'onglet « Bilan Pédagogique » pour archiver vos paliers franchis.
+                  {isEn 
+                    ? 'Export your current learning achievements to the Curriculum Summary tab to archive your progress milestones.' 
+                    : 'Exportez l\'état actuel de votre apprentissage dans l\'onglet « Bilan Pédagogique » pour archiver vos paliers franchis.'}
                 </p>
 
                 <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80 space-y-2 text-xs mb-6">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Niveau actuel :</span>
+                    <span className="text-slate-400">{isEn ? 'Current level:' : 'Niveau actuel :'}</span>
                     <span className="font-semibold text-amber-400 uppercase">{userProgress.userLevel}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Points XP :</span>
+                    <span className="text-slate-400">{isEn ? 'XP Points:' : 'Points XP :'}</span>
                     <span className="font-mono-data font-bold text-white">{userProgress.xp} XP</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Leçons validées :</span>
-                    <span className="font-mono-data font-semibold text-emerald-400">{userProgress.completedLessons.length} leçons</span>
+                    <span className="text-slate-400">{isEn ? 'Completed lessons:' : 'Leçons validées :'}</span>
+                    <span className="font-mono-data font-semibold text-emerald-400">
+                      {userProgress.completedLessons.length} {isEn ? 'lessons' : 'leçons'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Distinctions débloquées :</span>
-                    <span className="font-mono-data font-semibold text-purple-400">{userProgress.unlockedBadges.length} badges</span>
+                    <span className="text-slate-400">{isEn ? 'Unlocked honors:' : 'Distinctions débloquées :'}</span>
+                    <span className="font-mono-data font-semibold text-purple-400">
+                      {userProgress.unlockedBadges.length} {isEn ? 'badges' : 'badges'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -644,7 +695,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
                 <Database className="w-3.5 h-3.5" />
-                <span>Exporter le Bilan Pédagogique</span>
+                <span>{isEn ? 'Export Curriculum Progress' : 'Exporter le Bilan Pédagogique'}</span>
               </button>
             </div>
 
@@ -659,7 +710,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 <div className="flex items-center gap-2 overflow-x-auto">
                   <span className="text-xs font-semibold text-slate-400 mr-2 flex items-center gap-1.5 shrink-0">
                     <Table className="w-3.5 h-3.5 text-emerald-400" />
-                    Onglets du classeur :
+                    {isEn ? 'Spreadsheet tabs:' : 'Onglets du classeur :'}
                   </span>
                   {activeDetails.sheets.map((sheet) => (
                     <button
@@ -677,11 +728,11 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 </div>
 
                 <div className="flex items-center gap-3 text-xs text-slate-400">
-                  <span>{sheetRows.length} ligne(s) chargée(s)</span>
+                  <span>{sheetRows.length} {isEn ? 'row(s) loaded' : 'ligne(s) chargée(s)'}</span>
                   <button
                     onClick={() => selectedSpreadsheetId && loadSpreadsheetContent(selectedSpreadsheetId)}
                     className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
-                    title="Recharger la table"
+                    title={isEn ? 'Reload table' : 'Recharger la table'}
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingRows ? 'animate-spin' : ''}`} />
                   </button>
@@ -693,12 +744,14 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 {isLoadingRows ? (
                   <div className="p-12 text-center text-xs text-slate-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-400" />
-                    Lecture des données Google Sheets en cours...
+                    {isEn ? 'Reading Google Sheets data...' : 'Lecture des données Google Sheets en cours...'}
                   </div>
                 ) : sheetRows.length === 0 ? (
                   <div className="p-12 text-center text-xs text-slate-400">
                     <FileText className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-                    Cet onglet est actuellement vide. Utilisez les boutons ci-dessus pour insérer des données.
+                    {isEn
+                      ? 'This tab is currently empty. Use the buttons above to insert data.'
+                      : 'Cet onglet est actuellement vide. Utilisez les boutons ci-dessus pour insérer des données.'}
                   </div>
                 ) : (
                   <table className="w-full text-left text-xs border-collapse">
@@ -743,7 +796,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
               </div>
               <div>
                 <h3 className="text-base font-semibold text-slate-100">{confirmationModal.title}</h3>
-                <p className="text-xs text-slate-400">Confirmation d'écriture Google Sheets</p>
+                <p className="text-xs text-slate-400">{isEn ? 'Google Sheets write confirmation' : "Confirmation d'écriture Google Sheets"}</p>
               </div>
             </div>
 
@@ -766,7 +819,7 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 disabled={isExecutingMutation}
                 className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
               >
-                Annuler
+                {isEn ? 'Cancel' : 'Annuler'}
               </button>
               <button
                 onClick={confirmationModal.onConfirm}
@@ -776,12 +829,12 @@ export const GoogleSheetsHub: React.FC<GoogleSheetsHubProps> = ({ userProgress }
                 {isExecutingMutation ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Synchronisation...</span>
+                    <span>{isEn ? 'Syncing...' : 'Synchronisation...'}</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Confirmer l'opération</span>
+                    <span>{isEn ? 'Confirm operation' : "Confirmer l'opération"}</span>
                   </>
                 )}
               </button>

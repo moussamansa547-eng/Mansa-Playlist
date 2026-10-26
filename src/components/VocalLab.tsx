@@ -5,8 +5,11 @@ import {
 } from 'lucide-react';
 import { TONGUE_TWISTERS, TongueTwister } from '../data/tongueTwisters';
 import { playMetronomeClick, speakFrench, stopSpeech, playSuccessChime } from '../utils/audioSynthesis';
+import { useLanguage } from '../context/LanguageContext';
 
 export const VocalLab: React.FC = () => {
+  const { language, voiceLang } = useLanguage();
+  const isEn = language === 'en';
   const [selectedTwister, setSelectedTwister] = useState<TongueTwister>(TONGUE_TWISTERS[0]);
   const [filterCategory, setFilterCategory] = useState<string>('Tous');
 
@@ -53,7 +56,7 @@ export const VocalLab: React.FC = () => {
     } else {
       setIsSpeaking(true);
       setSpeechRate(rate);
-      speakFrench(selectedTwister.phrase, rate, () => setIsSpeaking(false));
+      speakFrench(selectedTwister.phrase, rate, () => setIsSpeaking(false), voiceLang);
     }
   };
 
@@ -90,6 +93,14 @@ export const VocalLab: React.FC = () => {
     setIsRecording(false);
   };
 
+  const categoryLabels: Record<string, string> = {
+    'Tous': isEn ? 'All' : 'Tous',
+    'Sifflantes': isEn ? 'Sibilants' : 'Sifflantes',
+    'Labiales': isEn ? 'Labials' : 'Labiales',
+    'Dentales': isEn ? 'Dentals' : 'Dentales',
+    'Consonnes doubles': isEn ? 'Double consonants' : 'Consonnes doubles'
+  };
+
   const filteredTwisters = filterCategory === 'Tous'
     ? TONGUE_TWISTERS
     : TONGUE_TWISTERS.filter(t => t.category === filterCategory);
@@ -101,13 +112,15 @@ export const VocalLab: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
           <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-            Gymnastique Articulatoire & Diction
+            {isEn ? 'Articulatory Gymnastics & Diction' : 'Gymnastique Articulatoire & Diction'}
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-            Laboratoire Vocal & Virelangues
+            {isEn ? 'Vocal Lab & Tongue Twisters' : 'Laboratoire Vocal & Virelangues'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Déliez la langue, les lèvres et le voile du palais avec le métronome et les modèles sonores.
+            {isEn
+              ? 'Unbind tongue, lips, and soft palate with acoustic metronome and audio models.'
+              : 'Déliez la langue, les lèvres et le voile du palais avec le métronome et les modèles sonores.'}
           </p>
         </div>
 
@@ -123,7 +136,7 @@ export const VocalLab: React.FC = () => {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {cat}
+              {categoryLabels[cat] || cat}
             </button>
           ))}
         </div>
@@ -134,7 +147,7 @@ export const VocalLab: React.FC = () => {
         {/* Left Column (5 cols): List of Tongue Twisters */}
         <div className="lg:col-span-5 space-y-3">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            Exercices Disponibles ({filteredTwisters.length})
+            {isEn ? `Available Exercises (${filteredTwisters.length})` : `Exercices Disponibles (${filteredTwisters.length})`}
           </p>
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
             {filteredTwisters.map(t => {
@@ -174,7 +187,7 @@ export const VocalLab: React.FC = () => {
             
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                {selectedTwister.category} · Niveau {selectedTwister.difficulty}
+                {categoryLabels[selectedTwister.category] || selectedTwister.category} · {isEn ? 'Level' : 'Niveau'} {selectedTwister.difficulty}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -182,13 +195,13 @@ export const VocalLab: React.FC = () => {
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{isSpeaking ? 'Arrêter' : 'Modèle (1.0x)'}</span>
+                  <span>{isSpeaking ? (isEn ? 'Stop' : 'Arrêter') : (isEn ? 'Model (1.0x)' : 'Modèle (1.0x)')}</span>
                 </button>
                 <button
                   onClick={() => handleSpeak(1.3)}
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <span>Rapide (1.3x)</span>
+                  <span>{isEn ? 'Fast (1.3x)' : 'Rapide (1.3x)'}</span>
                 </button>
               </div>
             </div>
@@ -203,11 +216,11 @@ export const VocalLab: React.FC = () => {
             {/* Phonetic & Anatomical tips */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mb-8">
               <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                <p className="font-semibold text-amber-300 mb-1">Cible Phonétique :</p>
+                <p className="font-semibold text-amber-300 mb-1">{isEn ? 'Phonetic Target:' : 'Cible Phonétique :'}</p>
                 <p className="text-slate-400 leading-relaxed">{selectedTwister.phoneticFocus}</p>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                <p className="font-semibold text-sky-300 mb-1">Placement Anatomique :</p>
+                <p className="font-semibold text-sky-300 mb-1">{isEn ? 'Anatomical Placement:' : 'Placement Anatomique :'}</p>
                 <p className="text-slate-400 leading-relaxed">{selectedTwister.anatomyTip}</p>
               </div>
             </div>
@@ -217,7 +230,7 @@ export const VocalLab: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold text-white">Métronome Acoustique</span>
+                  <span className="text-xs font-bold text-white">{isEn ? 'Acoustic Metronome' : 'Métronome Acoustique'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   {[0, 1, 2, 3].map(i => (
@@ -244,12 +257,12 @@ export const VocalLab: React.FC = () => {
                     }`}
                   >
                     {isMetronomePlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    <span>{isMetronomePlaying ? 'Arrêter Métronome' : 'Lancer le Métronome'}</span>
+                    <span>{isMetronomePlaying ? (isEn ? 'Stop Metronome' : 'Arrêter Métronome') : (isEn ? 'Start Metronome' : 'Lancer le Métronome')}</span>
                   </button>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs">
-                  <span className="text-slate-400">Tempo :</span>
+                  <span className="text-slate-400">{isEn ? 'Tempo:' : 'Tempo :'}</span>
                   <input
                     type="range"
                     min="60"
@@ -275,7 +288,7 @@ export const VocalLab: React.FC = () => {
                     className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <Mic className="w-3.5 h-3.5" />
-                    <span>M'enregistrer sur ce virelangue</span>
+                    <span>{isEn ? 'Record myself on this twister' : "M'enregistrer sur ce virelangue"}</span>
                   </button>
                 ) : (
                   <button
@@ -283,14 +296,14 @@ export const VocalLab: React.FC = () => {
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold text-xs rounded-lg flex items-center gap-2 transition-colors cursor-pointer border border-red-500/50"
                   >
                     <Square className="w-3.5 h-3.5 fill-current" />
-                    <span>Terminer le test vocal</span>
+                    <span>{isEn ? 'Finish vocal test' : 'Terminer le test vocal'}</span>
                   </button>
                 )}
 
                 {isRecording && (
                   <span className="text-xs text-red-400 font-mono-data flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <span>Enregistrement...</span>
+                    <span>{isEn ? 'Recording...' : 'Enregistrement...'}</span>
                   </span>
                 )}
               </div>
@@ -299,7 +312,7 @@ export const VocalLab: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Écoute du test :</span>
+                    <span>{isEn ? 'Playback test:' : 'Écoute du test :'}</span>
                   </span>
                   <audio src={audioUrl} controls className="h-8 w-48" />
                 </div>

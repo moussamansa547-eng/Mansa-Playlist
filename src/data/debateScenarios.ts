@@ -139,3 +139,123 @@ export const DEBATE_SCENARIOS: DebateScenario[] = [
     ]
   }
 ];
+
+export const DEBATE_SCENARIOS_EN: DebateScenario[] = [
+  {
+    id: 'deb-1',
+    title: "High-Stakes Investment Committee",
+    context: "You present a major strategic overhaul before a cautious executive committee wary of risking historical market share.",
+    audienceGoal: "Convince the board that the status quo is far riskier than bold modernization.",
+    difficulty: 'Intermédiaire',
+    initialConviction: 45,
+    turns: [
+      {
+        id: 'turn-1',
+        opponentName: "Marcus Vance",
+        opponentRole: "Chief Financial Officer",
+        opponentStatement: "Your proposal looks enticing on slides, but our current profit margin suits us fine. Why gamble 30% of our liquid reserves on a venture with no guaranteed return?",
+        opponentAttitude: 'Sceptique',
+        fallacyUsed: "Status Quo Bias & Loss Aversion",
+        options: [
+          {
+            text: "You refuse to face reality. If we sit still, this company will be bankrupt in three years!",
+            rhetoricType: 'Réaction Émotionnelle Faible',
+            convictionDelta: -18,
+            feedback: "Hostile and accusing. Triggers an immediate defensive posture without delivering any factual justification.",
+            isRecommended: false
+          },
+          {
+            text: "Mr. Vance, your prudence honors our fiscal discipline. Allow me to offer three metrics: all three of our direct competitors invested this quarter, and the cost of inaction is quantified at a 15% margin erosion on our legacy core within 24 months.",
+            rhetoricType: 'Ethos (Crédibilité)',
+            convictionDelta: 22,
+            feedback: "Masterful concession technique (validate his fiscal prudence) paired with razor-sharp data anchors (Logos supported by Ethos).",
+            isRecommended: true
+          },
+          {
+            text: "Think of our frontline teams waiting for the tools to win. They are demoralized by this perpetual hesitation.",
+            rhetoricType: 'Pathos (Émotion)',
+            convictionDelta: 5,
+            feedback: "Touches an empathetic human chord, but in front of a CFO, emotional appeal alone without ROI metrics will not unlock capital.",
+            isRecommended: false
+          }
+        ]
+      },
+      {
+        id: 'turn-2',
+        opponentName: "Helen Rostand",
+        opponentRole: "Head of Global Operations",
+        opponentStatement: "Either we concentrate exclusively on our core operations and safeguard our jobs, or we dive into your pipe dream and jeopardize everyone.",
+        opponentAttitude: 'Hostile',
+        fallacyUsed: "False Dilemma Fallacy (Black-and-White Thinking)",
+        options: [
+          {
+            text: "Framing this as a choice between job security and innovation is a false dilemma, dear Helen. Industrial history demonstrates that organizations which protected their workforce are precisely those that updated their toolchain. Our project finances the long-term vitality of the core business.",
+            rhetoricType: 'Logos (Raison)',
+            convictionDelta: 24,
+            feedback: "Remarkable dismantling of the false dichotomy. You unpack the rhetorical trap with poise and historical precedent.",
+            isRecommended: true
+          },
+          {
+            text: "That is an absurd assertion! You systematically caricature my proposals just to terrify the room.",
+            rhetoricType: 'Réaction Émotionnelle Faible',
+            convictionDelta: -15,
+            feedback: "Loss of emotional composure. The speaker attacked on form forfeits their moral authority (Ethos).",
+            isRecommended: false
+          },
+          {
+            text: "I understand your genuine anxieties. Every one of us has a family to provide for, and it is precisely out of dedication to this firm that I fight for this vision.",
+            rhetoricType: 'Pathos (Émotion)',
+            convictionDelta: 10,
+            feedback: "Fosters empathy, but fails to rebut the fundamental operational challenge raised.",
+            isRecommended: false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'deb-2',
+    title: "Public Town Hall: Transition & Equity",
+    context: "You advocate for a public urban zoning overhaul before an impassioned civic assembly.",
+    audienceGoal: "Turn citizen skepticism into democratic consensus and shared ownership.",
+    difficulty: 'Avancé',
+    initialConviction: 35,
+    turns: [
+      {
+        id: 'turn-1',
+        opponentName: "Counsel Dumont",
+        opponentRole: "Community Advocate",
+        opponentStatement: "You sit comfortably in your expert towers! You come here lecturing us on how to live our lives when you don't even live in our neighborhood!",
+        opponentAttitude: 'Provocateur',
+        fallacyUsed: "Ad Hominem (Circumstantial Attack)",
+        options: [
+          {
+            text: "My home address has nothing to do with the laws of urban thermodynamics and economic reality. Let us inspect the data rather than my personal coordinates.",
+            rhetoricType: 'Logos (Raison)',
+            convictionDelta: 4,
+            feedback: "Factually sound, yet perceived as aloof and condescending by an assembly seeking relational empathy.",
+            isRecommended: false
+          },
+          {
+            text: "You are entirely right to emphasize the vital importance of living this neighborhood day in and day out. That is precisely why over the past six weeks, our team conducted 42 in-person sessions with local shopkeepers on your street. I am not here to mandate from above: I am here to submit proposals conceived alongside you.",
+            rhetoricType: 'Ethos (Crédibilité)',
+            convictionDelta: 25,
+            feedback: "Rhetorical masterstroke: you welcome the objection (disarming the Ad Hominem), prove grounded fieldwork, and reaffirm mutual respect.",
+            isRecommended: true
+          },
+          {
+            text: "And what about you, Mr. Dumont? What do you contribute besides insults and obstructionism?",
+            rhetoricType: 'Réaction Émotionnelle Faible',
+            convictionDelta: -20,
+            feedback: "You take the bait and descend into a petty squabble (Tu Quoque). The room immediately turns against you.",
+            isRecommended: false
+          }
+        ]
+      }
+    ]
+  }
+];
+
+export const getLocalizedDebateScenarios = (language: 'fr' | 'en'): DebateScenario[] => {
+  return language === 'en' ? DEBATE_SCENARIOS_EN : DEBATE_SCENARIOS;
+};

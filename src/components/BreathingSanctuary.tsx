@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Heart, Wind, Sparkles, CheckCircle2 } from 'lucide-react';
 import { playSuccessChime } from '../utils/audioSynthesis';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BreathingSanctuaryProps {
   onSessionComplete?: () => void;
 }
 
 export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessionComplete }) => {
+  const { language } = useLanguage();
+  const isEn = language === 'en';
+
   const [mode, setMode] = useState<'coherence' | '478'>('coherence');
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<'Inspiration' | 'Rétention' | 'Expiration'>('Inspiration');
@@ -66,16 +70,11 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
     setIsFinished(false);
   };
 
-  const getOrbScale = () => {
-    if (!isActive) return 'scale-90';
-    if (phase === 'Inspiration') {
-      const progress = phaseSecond / currentMax;
-      return `scale-[${(0.85 + progress * 0.45).toFixed(2)}]`;
-    }
-    if (phase === 'Rétention') return 'scale-130';
-    // Expiration
-    const progress = phaseSecond / currentMax;
-    return `scale-[${(1.3 - progress * 0.45).toFixed(2)}]`;
+  const getPhaseLabel = () => {
+    if (!isActive) return isEn ? 'Ready' : 'Prêt';
+    if (phase === 'Inspiration') return isEn ? 'Inhale' : 'Inspiration';
+    if (phase === 'Rétention') return isEn ? 'Hold' : 'Rétention';
+    return isEn ? 'Exhale' : 'Expiration';
   };
 
   return (
@@ -83,13 +82,15 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
       
       <div className="text-center max-w-xl mx-auto mb-8">
         <span className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
-          Sanctuaire Anti-Trac & Apaisement Vagal
+          {isEn ? "Stage Fright Sanctuary & Vagal Calming" : "Sanctuaire Anti-Trac & Apaisement Vagal"}
         </span>
         <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-white mt-1">
-          Guide Respiratoire de Pleine Présence
+          {isEn ? "Mindful Breathing Guidance" : "Guide Respiratoire de Pleine Présence"}
         </h2>
         <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
-          Activez le nerf vague en 90 secondes avant votre entrée sur scène. Le rythme cardiaque se stabilise, le cortisol chute et votre voix descend naturellement dans les graves.
+          {isEn
+            ? "Activate your vagus nerve 90 seconds before taking the stage. Heart rate stabilizes, cortisol drops, and your voice naturally deepens into rich chest resonance."
+            : "Activez le nerf vague en 90 secondes avant votre entrée sur scène. Le rythme cardiaque se stabilise, le cortisol chute et votre voix descend naturellement dans les graves."}
         </p>
 
         {/* Mode selector */}
@@ -105,7 +106,7 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Cohérence Cardiaque (5s / 5s)
+            {isEn ? "Cardiac Coherence (5s / 5s)" : "Cohérence Cardiaque (5s / 5s)"}
           </button>
           <button
             onClick={() => {
@@ -118,7 +119,7 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Technique 4-7-8 (Anti-Panique)
+            {isEn ? "4-7-8 Technique (Anti-Panic)" : "Technique 4-7-8 (Anti-Panique)"}
           </button>
         </div>
       </div>
@@ -154,7 +155,7 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
             }`}
           >
             <span className="font-serif-title font-bold text-white text-base sm:text-lg tracking-wide drop-shadow-md">
-              {isActive ? phase : 'Prêt'}
+              {getPhaseLabel()}
             </span>
             {isActive && (
               <span className="font-mono-data text-2xl font-bold text-white/90 drop-shadow-md mt-1">
@@ -168,13 +169,15 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
         <div className="text-center mt-2 mb-6 h-12">
           {isActive ? (
             <p className="text-sm font-medium text-slate-200">
-              {phase === 'Inspiration' && "Inspirez calmement par le nez en gonflant le ventre..."}
-              {phase === 'Rétention' && "Suspendez le souffle, détendez les épaules..."}
-              {phase === 'Expiration' && "Expirez très lentement par la bouche, videz tout l'air..."}
+              {phase === 'Inspiration' && (isEn ? "Inhale calmly through your nose, expanding your abdomen..." : "Inspirez calmement par le nez en gonflant le ventre...")}
+              {phase === 'Rétention' && (isEn ? "Hold your breath gently, soften your shoulders..." : "Suspendez le souffle, détendez les épaules...")}
+              {phase === 'Expiration' && (isEn ? "Exhale very slowly through your mouth, emptying all air..." : "Expirez très lentement par la bouche, videz tout l'air...")}
             </p>
           ) : (
             <p className="text-xs text-slate-400">
-              Installez-vous confortablement, décroisez les jambes et posez les mains sur les cuisses.
+              {isEn 
+                ? "Sit comfortably upright, uncross your legs, and rest your hands on your thighs." 
+                : "Installez-vous confortablement, décroisez les jambes et posez les mains sur les cuisses."}
             </p>
           )}
         </div>
@@ -190,13 +193,13 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
             }`}
           >
             {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            <span>{isActive ? 'Pause' : 'Démarrer la Session'}</span>
+            <span>{isActive ? 'Pause' : (isEn ? 'Start Session' : 'Démarrer la Session')}</span>
           </button>
 
           <button
             onClick={handleReset}
             className="p-3 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
-            title="Réinitialiser"
+            title={isEn ? "Reset" : "Réinitialiser"}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -206,17 +209,26 @@ export const BreathingSanctuary: React.FC<BreathingSanctuaryProps> = ({ onSessio
         <div className="mt-8 pt-6 border-t border-slate-800 w-full flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <Heart className="w-4 h-4 text-rose-400" />
-            <span>Temps de session : <span className="font-mono-data font-bold text-white">{Math.floor(totalSeconds / 60)}m {totalSeconds % 60}s</span></span>
+            <span>
+              {isEn ? "Session time: " : "Temps de session : "}
+              <span className="font-mono-data font-bold text-white">{Math.floor(totalSeconds / 60)}m {totalSeconds % 60}s</span>
+            </span>
           </div>
 
-          <span className="text-slate-500">Objectif recommandé : 2 minutes (120s)</span>
+          <span className="text-slate-500">
+            {isEn ? "Recommended goal: 2 minutes (120s)" : "Objectif recommandé : 2 minutes (120s)"}
+          </span>
         </div>
 
         {isFinished && (
           <div className="mt-6 p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-emerald-200 text-xs flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <span>
-              Session accomplie ! Votre fréquence cardiaque est synchronisée. Vous débloquez <strong>+60 XP</strong> et le badge <strong>Maître du Souffle</strong>.
+              {isEn ? (
+                <>Session complete! Your heart rate is synchronized. You unlocked <strong>+60 XP</strong> and the <strong>Master of Breath</strong> badge.</>
+              ) : (
+                <>Session accomplie ! Votre fréquence cardiaque est synchronisée. Vous débloquez <strong>+60 XP</strong> et le badge <strong>Maître du Souffle</strong>.</>
+              )}
             </span>
           </div>
         )}

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, User, ArrowRight, RotateCcw, Award, CheckCircle2, 
   AlertCircle, Sparkles, MessageSquare
 } from 'lucide-react';
-import { DEBATE_SCENARIOS, DebateScenario, DebateTurn } from '../data/debateScenarios';
+import { DebateScenario, DebateTurn, getLocalizedDebateScenarios } from '../data/debateScenarios';
 import { playSuccessChime } from '../utils/audioSynthesis';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -15,12 +15,20 @@ export const DebateArena: React.FC<DebateArenaProps> = ({ onDebateWon }) => {
   const { language } = useLanguage();
   const isEn = language === 'en';
 
-  const [selectedScenario, setSelectedScenario] = useState<DebateScenario>(DEBATE_SCENARIOS[0]);
+  const scenarios = getLocalizedDebateScenarios(language);
+  const [selectedScenario, setSelectedScenario] = useState<DebateScenario>(scenarios[0]);
   const [currentTurnIdx, setCurrentTurnIdx] = useState(0);
-  const [conviction, setConviction] = useState(selectedScenario.initialConviction);
+  const [conviction, setConviction] = useState(scenarios[0].initialConviction);
   const [selectedOptionIdx, setSelectedOptionIdx] = useState<number | null>(null);
   const [hasAnsweredTurn, setHasAnsweredTurn] = useState(false);
   const [isDebateFinished, setIsDebateFinished] = useState(false);
+
+  // Sync selectedScenario when language changes
+  useEffect(() => {
+    const updatedScenarios = getLocalizedDebateScenarios(language);
+    const match = updatedScenarios.find(s => s.id === selectedScenario.id) || updatedScenarios[0];
+    setSelectedScenario(match);
+  }, [language]);
 
   const currentTurn: DebateTurn = selectedScenario.turns[currentTurnIdx];
 
@@ -78,7 +86,7 @@ export const DebateArena: React.FC<DebateArenaProps> = ({ onDebateWon }) => {
 
         {/* Scenario Switcher */}
         <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-lg">
-          {DEBATE_SCENARIOS.map(sc => (
+          {scenarios.map(sc => (
             <button
               key={sc.id}
               onClick={() => handleResetDebate(sc)}
@@ -192,7 +200,12 @@ export const DebateArena: React.FC<DebateArenaProps> = ({ onDebateWon }) => {
                     >
                       <div className="flex items-start justify-between gap-4 mb-2">
                         <span className="text-xs font-semibold text-amber-400">
-                          {opt.rhetoricType}
+                          {isEn ? (
+                            opt.rhetoricType.includes('Logos') ? 'Logos (Reason)' :
+                            opt.rhetoricType.includes('Ethos') ? 'Ethos (Credibility)' :
+                            opt.rhetoricType.includes('Pathos') ? 'Pathos (Emotion)' :
+                            'Weak Emotional Reaction'
+                          ) : opt.rhetoricType}
                         </span>
                         {hasAnsweredTurn && isSelected && (
                           <span className={`font-mono-data text-xs font-bold ${

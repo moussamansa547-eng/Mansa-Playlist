@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { LessonContent } from '../types/oratory';
 import { speakFrench, stopSpeech, playSuccessChime } from '../utils/audioSynthesis';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LessonViewerProps {
   lesson: LessonContent;
@@ -19,6 +20,9 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
   onCompleteLesson,
   isCompleted: initialCompleted
 }) => {
+  const { language, voiceLang } = useLanguage();
+  const isEn = language === 'en';
+
   // Navigation tabs within the lesson
   const [activeTab, setActiveTab] = useState<'cours' | 'schema' | 'comparatif' | 'demo' | 'exercices' | 'quiz' | 'recap'>('cours');
   
@@ -42,7 +46,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
-      speakFrench(text, 1.0, () => setIsSpeaking(false));
+      speakFrench(text, 1.0, () => setIsSpeaking(false), voiceLang);
     }
   };
 
@@ -81,11 +85,11 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour aux modules</span>
+          <span>{isEn ? "Back to modules" : "Retour aux modules"}</span>
         </button>
 
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span>Module {lesson.moduleId}</span>
+          <span>{isEn ? "Module " : "Module "}{lesson.moduleId}</span>
           <span aria-hidden="true">·</span>
           <span>{lesson.durationMinutes} min</span>
           <span aria-hidden="true">·</span>
@@ -96,7 +100,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
       {/* Lesson Header : 1. Titre et Objectif Visuel */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 mb-8 relative overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 text-xs text-amber-400 font-medium mb-2">
-          <span>Compétence visée</span>
+          <span>{isEn ? "Target Skill" : "Compétence visée"}</span>
           <span aria-hidden="true">·</span>
           <span className="text-slate-300 font-normal">{lesson.targetSkill}</span>
         </div>
@@ -110,7 +114,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
             <p className="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
               <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-              <span>Pourquoi c'est décisif dans la vie réelle :</span>
+              <span>{isEn ? "Why this is critical in real scenarios:" : "Pourquoi c'est décisif dans la vie réelle :"}</span>
             </p>
             <p className="text-slate-400 leading-relaxed">{lesson.realLifeContext}</p>
           </div>
@@ -118,7 +122,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
             <p className="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-              <span>Ce que vous allez maîtriser :</span>
+              <span>{isEn ? "What you will master:" : "Ce que vous allez maîtriser :"}</span>
             </p>
             <p className="text-slate-400 leading-relaxed">{lesson.shortIntro}</p>
           </div>
@@ -133,7 +137,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'cours' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          1. Cours Structuré
+          {isEn ? "1. Structured Course" : "1. Cours Structuré"}
         </button>
 
         <button
@@ -142,7 +146,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'schema' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          2. Schéma Visuel
+          {isEn ? "2. Visual Blueprint" : "2. Schéma Visuel"}
         </button>
 
         {lesson.comparativeExample && (
@@ -152,7 +156,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               activeTab === 'comparatif' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
             }`}
           >
-            3. Exemple Comparatif
+            {isEn ? "3. Before / After Example" : "3. Exemple Comparatif"}
           </button>
         )}
 
@@ -162,7 +166,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'demo' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          4. Démo Interactive
+          {isEn ? "4. Interactive Demo" : "4. Démo Interactive"}
         </button>
 
         <button
@@ -171,7 +175,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'exercices' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          5. Exercices Pratiques
+          {isEn ? "5. Practical Exercises" : "5. Exercices Pratiques"}
         </button>
 
         <button
@@ -180,7 +184,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'quiz' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          6. Évaluation Quiz
+          {isEn ? "6. Certification Quiz" : "6. Évaluation Quiz"}
         </button>
 
         <button
@@ -189,7 +193,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             activeTab === 'recap' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          7. Fiche Récap
+          {isEn ? "7. Summary Cheat-Sheet" : "7. Fiche Récap"}
         </button>
       </div>
 
@@ -216,14 +220,14 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                Exemple Concret en Situation
+                {isEn ? "Concrete Real-World Example" : "Exemple Concret en Situation"}
               </h4>
               <button
                 onClick={() => handleSpeak(lesson.concreteExample)}
                 className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
               >
                 <Volume2 className="w-3.5 h-3.5" />
-                <span>{isSpeaking ? 'Arrêter' : 'Écouter la déclamation'}</span>
+                <span>{isSpeaking ? (isEn ? 'Stop' : 'Arrêter') : (isEn ? 'Listen to recitation' : 'Écouter la déclamation')}</span>
               </button>
             </div>
             <p className="text-sm italic text-slate-200 leading-relaxed font-serif-title">
@@ -236,7 +240,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab('schema')}
               className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
-              <span>Voir le Schéma Pédagogique</span>
+              <span>{isEn ? "View Visual Blueprint" : "Voir le Schéma Pédagogique"}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -248,7 +252,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
           <div className="mb-6">
             <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-              Illustration & Modèle Conceptuel
+              {isEn ? "Illustration & Conceptual Framework" : "Illustration & Modèle Conceptuel"}
             </span>
             <h3 className="font-serif-title text-xl font-bold text-white mt-1">
               {lesson.visualIllustration.title}
@@ -280,7 +284,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                   </div>
                   {node.highlight && (
                     <span className="text-[11px] font-medium text-amber-400">
-                      Étape Clé
+                      {isEn ? "Key Step" : "Étape Clé"}
                     </span>
                   )}
                 </div>
@@ -296,13 +300,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab('cours')}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Précédent
+              {isEn ? "Previous" : "Précédent"}
             </button>
             <button
               onClick={() => setActiveTab(lesson.comparativeExample ? 'comparatif' : 'demo')}
               className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
-              <span>Continuer</span>
+              <span>{isEn ? "Continue" : "Continuer"}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -314,13 +318,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
             <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-              Anatomie Comparative Avant / Après
+              {isEn ? "Comparative Before / After Breakdown" : "Anatomie Comparative Avant / Après"}
             </span>
             <h3 className="font-serif-title text-xl font-bold text-white mt-1 mb-2">
               {lesson.comparativeExample.title}
             </h3>
             <p className="text-xs text-slate-400 mb-6">
-              Contexte : {lesson.comparativeExample.context}
+              {isEn ? "Context: " : "Contexte : "}{lesson.comparativeExample.context}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -328,13 +332,15 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               <div className="p-5 rounded-xl bg-red-950/20 border border-red-900/40">
                 <div className="flex items-center gap-2 text-xs font-semibold text-red-400 mb-3">
                   <AlertCircle className="w-4 h-4" />
-                  <span>Version Maladroite / À Éviter</span>
+                  <span>{isEn ? "Clunky Version / To Avoid" : "Version Maladroite / À Éviter"}</span>
                 </div>
                 <p className="text-sm text-slate-300 italic mb-4 p-3 bg-slate-950/60 rounded-lg border border-red-950/40">
                   "{lesson.comparativeExample.poorVersion}"
                 </p>
                 <div className="text-xs text-slate-400 space-y-1">
-                  <p className="font-semibold text-red-300">Pourquoi cela affaiblit le propos :</p>
+                  <p className="font-semibold text-red-300">
+                    {isEn ? "Why this weakens the impact:" : "Pourquoi cela affaiblit le propos :"}
+                  </p>
                   <p className="leading-relaxed">{lesson.comparativeExample.poorCritique}</p>
                 </div>
               </div>
@@ -344,12 +350,12 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Version Éloquente / Maîtrisée</span>
+                    <span>{isEn ? "Eloquent / Masterful Version" : "Version Éloquente / Maîtrisée"}</span>
                   </div>
                   <button
                     onClick={() => handleSpeak(lesson.comparativeExample!.improvedVersion)}
                     className="text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
-                    title="Écouter"
+                    title={isEn ? "Listen" : "Écouter"}
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                   </button>
@@ -358,7 +364,9 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                   "{lesson.comparativeExample.improvedVersion}"
                 </p>
                 <div className="text-xs text-slate-400 space-y-1">
-                  <p className="font-semibold text-emerald-300">Analyse rhétorique du succès :</p>
+                  <p className="font-semibold text-emerald-300">
+                    {isEn ? "Rhetorical success breakdown:" : "Analyse rhétorique du succès :"}
+                  </p>
                   <p className="leading-relaxed">{lesson.comparativeExample.improvedAnalysis}</p>
                 </div>
               </div>
@@ -368,7 +376,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             <div className="mt-6 p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 flex items-center gap-3">
               <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
-                <strong className="text-amber-300">Leçon essentielle : </strong>
+                <strong className="text-amber-300">{isEn ? "Essential takeaway: " : "Leçon essentielle : "}</strong>
                 {lesson.comparativeExample.keyTakeaway}
               </span>
             </div>
@@ -379,13 +387,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab('schema')}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Précédent
+              {isEn ? "Previous" : "Précédent"}
             </button>
             <button
               onClick={() => setActiveTab('demo')}
               className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
-              <span>Accéder à la Démo Interactive</span>
+              <span>{isEn ? "Go to Interactive Demo" : "Accéder à la Démo Interactive"}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -396,7 +404,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
       {activeTab === 'demo' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
           <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            Laboratoire de Pratique & Simulation
+            {isEn ? "Practice Lab & Simulation" : "Laboratoire de Pratique & Simulation"}
           </span>
           <h3 className="font-serif-title text-xl font-bold text-white mt-1 mb-2">
             {lesson.interactiveDemo.title}
@@ -445,13 +453,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab(lesson.comparativeExample ? 'comparatif' : 'schema')}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Précédent
+              {isEn ? "Previous" : "Précédent"}
             </button>
             <button
               onClick={() => setActiveTab('exercices')}
               className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
-              <span>Passer aux Exercices</span>
+              <span>{isEn ? "Proceed to Exercises" : "Passer aux Exercices"}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -464,7 +472,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           {/* Section 9: Exercice Guidé */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
             <span className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
-              Étape 1 : Exercice Guidé
+              {isEn ? "Step 1: Guided Exercise" : "Étape 1 : Exercice Guidé"}
             </span>
             <h3 className="font-serif-title text-lg font-bold text-white mt-1 mb-2">
               {lesson.guidedExercise.stepTitle}
@@ -475,7 +483,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
 
             <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-400 mb-4 flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Indice d'expert : {lesson.guidedExercise.hint}</span>
+              <span>{isEn ? "Expert hint: " : "Indice d'expert : "}{lesson.guidedExercise.hint}</span>
             </div>
 
             {!showGuidedSolution ? (
@@ -483,11 +491,11 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                 onClick={() => setShowGuidedSolution(true)}
                 className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 rounded-lg transition-colors cursor-pointer"
               >
-                Révéler la solution modèle
+                {isEn ? "Reveal model solution" : "Révéler la solution modèle"}
               </button>
             ) : (
               <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-900/40 text-xs text-emerald-200">
-                <p className="font-semibold mb-1">Correction expliquée :</p>
+                <p className="font-semibold mb-1">{isEn ? "Detailed walkthrough:" : "Correction expliquée :"}</p>
                 <p className="italic leading-relaxed">{lesson.guidedExercise.solution}</p>
               </div>
             )}
@@ -496,7 +504,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           {/* Section 10: Pratique Autonome */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
             <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
-              Étape 2 : Entraînement Autonome
+              {isEn ? "Step 2: Autonomous Practice" : "Étape 2 : Entraînement Autonome"}
             </span>
             <h3 className="font-serif-title text-lg font-bold text-white mt-1 mb-2">
               {lesson.autonomousPractice.challenge}
@@ -512,7 +520,9 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             </div>
 
             <div className="pt-4 border-t border-slate-800">
-              <p className="text-xs font-semibold text-slate-300 mb-2">Critères de validation des acquis :</p>
+              <p className="text-xs font-semibold text-slate-300 mb-2">
+                {isEn ? "Skill validation criteria:" : "Critères de validation des acquis :"}
+              </p>
               <div className="space-y-1 text-xs text-slate-400">
                 {lesson.autonomousPractice.criteria.map((crit, idx) => (
                   <p key={idx} className="flex items-center gap-2">
@@ -528,7 +538,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           <div className="bg-slate-900/60 border border-amber-500/30 rounded-2xl p-6">
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
               <Award className="w-4 h-4" />
-              <span>Défi de Terrain de Fin de Leçon</span>
+              <span>{isEn ? "Capstone Field Challenge" : "Défi de Terrain de Fin de Leçon"}</span>
             </div>
             <p className="text-sm font-semibold text-white leading-relaxed">
               {lesson.practicalChallenge}
@@ -540,13 +550,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab('demo')}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Précédent
+              {isEn ? "Previous" : "Précédent"}
             </button>
             <button
               onClick={() => setActiveTab('quiz')}
               className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
             >
-              <span>Passer à l'Évaluation Quiz</span>
+              <span>{isEn ? "Proceed to Quiz Assessment" : "Passer à l'Évaluation Quiz"}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -559,10 +569,10 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div>
               <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                Validation des Acquis Oratoires
+                {isEn ? "Oratory Skill Certification" : "Validation des Acquis Oratoires"}
               </span>
               <h3 className="font-serif-title text-xl font-bold text-white mt-1">
-                Quiz de Connaissances & Réflexes
+                {isEn ? "Knowledge & Reflex Quiz" : "Quiz de Connaissances & Réflexes"}
               </h3>
             </div>
             {quizSubmitted && (
@@ -570,7 +580,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                 <span className="font-mono-data text-2xl font-bold text-amber-400">
                   {scoreQuiz} / {lesson.quiz.length}
                 </span>
-                <p className="text-[11px] text-slate-400">Score obtenu</p>
+                <p className="text-[11px] text-slate-400">{isEn ? "Score achieved" : "Score obtenu"}</p>
               </div>
             )}
           </div>
@@ -614,7 +624,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
 
                 {quizSubmitted && (
                   <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-400">
-                    <strong className="text-slate-300">Explication détaillée : </strong>
+                    <strong className="text-slate-300">{isEn ? "Detailed explanation: " : "Explication détaillée : "}</strong>
                     {q.explanation}
                   </div>
                 )}
@@ -634,7 +644,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 }`}
               >
-                Valider mes Réponses
+                {isEn ? "Submit My Answers" : "Valider mes Réponses"}
               </button>
             ) : (
               <div className="flex items-center gap-3">
@@ -645,13 +655,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
                   }}
                   className="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  Recommencer le quiz
+                  {isEn ? "Retake quiz" : "Recommencer le quiz"}
                 </button>
                 <button
                   onClick={() => setActiveTab('recap')}
                   className="px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer"
                 >
-                  Voir la Fiche de Synthèse
+                  {isEn ? "View Summary Cheat-Sheet" : "Voir la Fiche de Synthèse"}
                 </button>
               </div>
             )}
@@ -664,16 +674,16 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
             <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-              Fiche de Synthèse Visuelle
+              {isEn ? "Visual Summary Memento" : "Fiche de Synthèse Visuelle"}
             </span>
             <h3 className="font-serif-title text-xl font-bold text-white mt-1 mb-6">
-              Mémento Oratoire : {lesson.title}
+              {isEn ? "Oratorical Memento: " : "Mémento Oratoire : "}{lesson.title}
             </h3>
 
             {/* Carte Mentale conceptuelle */}
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono-data text-xs text-amber-300 mb-6">
               <p className="text-[11px] text-slate-400 uppercase tracking-wider font-sans mb-1">
-                Fil d'Ariane Mental
+                {isEn ? "Mental Thread" : "Fil d'Ariane Mental"}
               </p>
               <p className="leading-relaxed">{lesson.visualRecap.mindMapConcept}</p>
             </div>
@@ -681,7 +691,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             {/* Points clés */}
             <div className="space-y-3 mb-6">
               <p className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                Les 3 Vérités à Ne Jamais Oublier :
+                {isEn ? "The 3 Invariable Laws of Mastery:" : "Les 3 Vérités à Ne Jamais Oublier :"}
               </p>
               {lesson.visualRecap.keyPoints.map((pt, idx) => (
                 <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-slate-300">
@@ -694,7 +704,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
             {/* Règle d'or */}
             <div className="p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-400/30 text-center">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                La Règle d'Or de la Leçon
+                {isEn ? "The Lesson's Golden Rule" : "La Règle d'Or de la Leçon"}
               </span>
               <p className="font-serif-title text-base sm:text-lg font-bold text-white mt-1 italic">
                 "{lesson.visualRecap.goldenRule}"
@@ -708,7 +718,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               onClick={() => setActiveTab('quiz')}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Précédent
+              {isEn ? "Previous" : "Précédent"}
             </button>
 
             <button
@@ -716,7 +726,7 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({
               className="px-8 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-sm rounded-lg transition-colors shadow-sm shadow-amber-400/20 cursor-pointer flex items-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Valider et Revenir aux Modules</span>
+              <span>{isEn ? "Validate & Return to Modules" : "Valider et Revenir aux Modules"}</span>
             </button>
           </div>
         </div>

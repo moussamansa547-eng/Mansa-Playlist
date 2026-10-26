@@ -20,10 +20,18 @@ export const ModuleList: React.FC<ModuleListProps> = ({
   completedLessons,
   userLevel
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === 'en';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'Tous' | LevelType>('Tous');
   const [expandedModuleId, setExpandedModuleId] = useState<number | null>(1);
+
+  const levelLabel = (lvl: string) => {
+    if (lvl === 'Débutant') return t('level.beginner');
+    if (lvl === 'Intermédiaire') return t('level.intermediate');
+    if (lvl === 'Avancé') return t('level.advanced');
+    return lvl;
+  };
 
   const getModuleIcon = (name: string) => {
     switch (name) {
@@ -139,7 +147,7 @@ export const ModuleList: React.FC<ModuleListProps> = ({
                         <span>{mod.category}</span>
                         <span aria-hidden="true">·</span>
                         <span className={mod.level === userLevel ? 'text-amber-400 font-semibold' : ''}>
-                          {mod.level}
+                          {levelLabel(mod.level)}
                         </span>
                         <span aria-hidden="true">·</span>
                         <span className="flex items-center gap-1">
@@ -177,7 +185,7 @@ export const ModuleList: React.FC<ModuleListProps> = ({
               {isExpanded && (
                 <div className="px-6 pb-6 pt-2 border-t border-slate-800/80">
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    Leçons & Ateliers Pratiques
+                    {isEn ? "Lessons & Practical Workshops" : "Leçons & Ateliers Pratiques"}
                   </p>
                   <div className="space-y-2">
                     {mod.lessons.map(lesson => {
@@ -207,7 +215,7 @@ export const ModuleList: React.FC<ModuleListProps> = ({
                             onClick={() => onSelectLesson(lesson)}
                             className="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-xs cursor-pointer"
                           >
-                            {isDone ? 'Revoir' : 'Commencer'}
+                            {isDone ? (isEn ? 'Review' : 'Revoir') : (isEn ? 'Start' : 'Commencer')}
                           </button>
                         </div>
                       );

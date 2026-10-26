@@ -41,7 +41,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span>{t('hero.kicker.studio')}</span>
               <span aria-hidden="true">·</span>
               <span className="text-slate-400 font-normal">
-                {t('hero.kicker.suggested')} : {userLevel}
+                {t('hero.kicker.suggested')} : {userLevel === 'Débutant' ? t('level.beginner') : userLevel === 'Intermédiaire' ? t('level.intermediate') : t('level.advanced')}
               </span>
             </div>
 
@@ -148,7 +148,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <p className="text-xs text-slate-400 font-medium">
               {language === 'fr' ? 'Anthologie Oratoire' : 'Speech Anthology'}
             </p>
-            <p className="font-mono-data text-2xl font-bold text-white mt-1">100 Discours</p>
+            <p className="font-mono-data text-2xl font-bold text-white mt-1">
+              {language === 'fr' ? '100 Discours' : '100 Speeches'}
+            </p>
             <p className="text-xs text-slate-400 mt-1">
               {language === 'fr' ? '100 Débats & Analyses' : '100 Debates & Dissections'}
             </p>
@@ -158,7 +160,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <p className="text-xs text-slate-400 font-medium">
               {language === 'fr' ? 'Évaluation' : 'Evaluation'}
             </p>
-            <p className="font-mono-data text-2xl font-bold text-emerald-400 mt-1">IA & Expert</p>
+            <p className="font-mono-data text-2xl font-bold text-emerald-400 mt-1">
+              {language === 'fr' ? 'IA & Expert' : 'AI & Expert'}
+            </p>
             <p className="text-xs text-slate-400 mt-1">
               {language === 'fr' ? 'Ethos, Pathos et Logos' : 'Ethos, Pathos & Logos'}
             </p>

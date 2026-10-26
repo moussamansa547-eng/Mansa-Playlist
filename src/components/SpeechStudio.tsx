@@ -85,7 +85,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
         const recog = new SpeechRecognition();
         recog.continuous = true;
         recog.interimResults = true;
-        recog.lang = 'fr-FR';
+        recog.lang = isEn ? 'en-US' : 'fr-FR';
         recog.onresult = (event: any) => {
           let current = '';
           for (let i = 0; i < event.results.length; i++) {
@@ -96,7 +96,7 @@ export const SpeechStudio: React.FC<SpeechStudioProps> = ({ onOpenVoiceAnalysis,
         recognitionRef.current = recog;
       }
     }
-  }, []);
+  }, [isEn]);
 
   // Prompter smooth scroll loop
   useEffect(() => {
